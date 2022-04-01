@@ -1,0 +1,60 @@
+- Aufgabenstellung
+    - Falsifizierung eines Carla Fahrzeugs gesteuert vom Traffic Manager
+        - init
+            - specific
+                - ### intro technisch
+                    - my recommendation to study reinforcement learning
+                        - docs:: https://spinningup.openai.com/en/latest/ 
+                        - [[Nicholas Renotte]] [Reinforcement Learning with Python - YouTube](https://www.youtube.com/playlist?list=PLgNJO2hghbmjlE6cuKMws2ejC54BTAaWV)
+                        - [Stable-Baselines3 Docs - Reliable Reinforcement Learning Implementations — Stable Baselines3 1.4.1a3 documentation](https://stable-baselines3.readthedocs.io/en/master/) 
+                        - [learning reinforcement learning. my recommendation to study… | by Lennart Luttkus | Mar, 2022 | Medium](https://medium.com/@luttkus.lennart/learning-reinforcement-learning-4e2e89b7fcb9)
+                    - [ll7/rl-test](https://github.com/ll7/rl-test) general overview for a simple environment
+                    - [ll7/carla-rl](https://github.com/ll7/carla-rl) carla specific rl
+                    - [[carla/0.9.13]]
+                        - vanilla carla reinforcement learning
+                        - 0.9.13 hat keine Probleme auf den neueren PCs.
+                        - Trennung von remote und lokal wegen GPU speicher
+                - ### intro theoretisch
+                    - @corsoSurveyAlgorithmsBlackBox2020
+                    - @corsoAlgorithmsBlackBoxSafety2021
+                    - @riedmaierSurveyScenarioBasedSafety2020
+                    - @westhofenCriticalityMetrics2021
+                    - @westhofenCriticalityMetricsAutomated2021
+                        - [[2108.02403] Criticality Metrics for Automated Driving: A Review and Suitability Analysis of the State of the Art](https://arxiv.org/abs/2108.02403)
+                - ### Hauptaufgabe
+                    - spektrum ausprobieren, wie man einfach ein Interface zu carla aufbaut
+                    - Test von verschiedenen callback funktionen für das speichern von konkreten scenarien
+                    - Testen von verschiedenen Observation und Action spaces.
+                        - observation
+                            - classification?
+                                - + depth?
+                                - Recursive observation? um markov decision auszutricksen?
+                    - Reward design für die Falsifizierung ausprobieren
+                    - Optuna ausprobieren
+                - Documentation
+                    - Umfangreiche Dokumentation auch vom Prozess
+                        - Vielleicht issue based arbeiten und jedes Problem darin dokumentieren und angehen.
+            - measurable
+                - 5 verschiedene risk Metriken
+                - 5 verschiedene observation spaces
+                - 5 verschiedene action spaces
+                - 2 verschiedene scenarien
+                    - mal vehicle vehicle, mal vehicle pedestrian
+                - 3 verschiedene locations auf der map
+                - 3 verschiedene maps
+                - 
+            - achievable
+                - 
+            - relevant
+                - falsifizierung kernbestandteil meiner diss
+                - traffic manager hat bugs
+                - reinforcement learning hat viele vorteile
+            - time
+                - maximal 300h
+                    - Einarbeitung ins Reinforcement Learning in Python 50h
+                    - 150h arbeiten an Hauptaufgabe
+                    - Puffer 50h
+                    - Documentation und Abschlusspräsentation 50h
+            - issue
+        - progress
+        - result
