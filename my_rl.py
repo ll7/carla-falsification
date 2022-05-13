@@ -1,10 +1,5 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB).
-#
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
 import datetime
 import glob
 import math
@@ -24,15 +19,16 @@ import carla
 import random
 import time
 from gym.spaces import Box
-
+import copy
 import gym
 from gym import spaces
 import numpy as np
 from stable_baselines3.common import env_checker
+import copy
+
 
 class CustomEnv(gym.Env):
     """Custom Environment that follows gym interface"""
-
 
     def __init__(self):
         super(CustomEnv, self).__init__()
@@ -40,40 +36,30 @@ class CustomEnv(gym.Env):
         # They must be gym.spaces objects
         # Example when using discrete actions:
 
+        # === Gym Variables ===
         self.action_space = Box(low=-1, high=1, shape=(2,), dtype=np.float32)
-
         obs_size = 4
         high = np.array([-999] * obs_size)  # 360 degree scan to a max of 4.5 meters
         low = np.array([999] * obs_size)
-
         self.observation_space = spaces.Box(low=low, high=high,
                                             shape=(4,), dtype=np.float32)
-        print(self.observation_space, self.observation_space.sample())
-        # Example for using image as input (channel-first; channel-last also works):
 
-        self.host = 'localhost'
-        self.town = 'Town01'
         self.done = False
         self.reward = -100
         self.max_tick_count = 100
-        # Steps per Tick
-        self.fixed_time_step = 1
-        self.max_walking_speed = 15.0 / 3.6  # m/s
-        self.actor_list = []
-        self.pos_car_default = [335, 260]
-        self.pos_walker_default = [335.489990234375, 273]
+        self.ticks_near_car = 0
 
-
-        self.pos_car = self.pos_car_default
-        self.pos_walker = self.pos_walker_default
-        self.observation = [self.pos_car, self.pos_walker]
+        # === Carla ===
+        self.host = 'localhost'
+        self.town = 'Town01'
 
         self.client = carla.Client(self.host, 2000)
         self.client.set_timeout(60.0)
         self.world = self.client.get_world()
+        self.blueprint_library = self.world.get_blueprint_library()
+        self.actor_list = []
 
-        self.spawn_point = self.world.get_map().get_spawn_points()[0]
-        # set correct map
+        # === set correct map ===
         self.map = self.world.get_map()
         if not self.map.name.endswith(self.town):
             self.world = self.client.load_world(self.town)
@@ -81,52 +67,117 @@ class CustomEnv(gym.Env):
                 time.sleep(0.5)
             self.world = self.client.get_world()
             self.map = self.world.get_map()
+        time.sleep(5)
 
-        time.sleep(2)
-
-        # set fixed time-step
+        # === set fixed time-step and synchronous mode
         # https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/#fixed-time-step
-        self.settings = self.world.get_settings()
-        self.settings.fixed_delta_seconds = self.fixed_time_step
-        self.world.apply_settings(self.settings)
-
-        # set synchronous mode
         # https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/#client-server-synchrony
         self.settings = self.world.get_settings()
+        self.settings.fixed_delta_seconds = 1
         self.settings.synchronous_mode = True  # Enables synchronous mode
         self.world.apply_settings(self.settings)
 
-        self.blueprint_library = self.world.get_blueprint_library()
+        # === Spawn Points ===
+        # 1. Spawn Point for Walker, 2. for Car
+        self.spawn_points = []
+        transform_walker_default = self.world.get_map().get_spawn_points()[35]
+        transform_car_default = self.world.get_map().get_spawn_points()[89]
+
+        # Modify car pos
+        # x = transform_car_default.location.x + 0
+        # y = 250
+        # z = transform_car_default.location.z
+        # carla_location = carla.Location(x=x, y=y, z=z)
+        # transform_car_default = carla.Transform(carla_location, transform_walker_default.rotation)
+        self.spawn_points.append(transform_walker_default)
+        self.spawn_points.append(transform_car_default)
+        # print(self.spawn_points[0], self.spawn_points[1])
 
         # === walker ===
+        self.max_walking_speed = 15.0 / 3.6  # m/s
+        self.pos_walker_default = [self.spawn_points[0].location.x, self.spawn_points[0].location.y]
+        self.pos_walker = self.pos_walker_default
         self.__spawn_walker()
-        carla_point = carla.Location(x=self.pos_walker[0], y=self.pos_walker[1], z=1)
+
+        # === car ===
+        self.pos_car_default = [self.spawn_points[1].location.x, self.spawn_points[1].location.y]
+        self.pos_car = self.pos_car_default
+
+        self.__spawn_car()
+
+        self.observation = [self.pos_car, self.pos_walker]
+
+        # === Draw Start/ End Point ===
+        carla_point = carla.Location(x=self.pos_walker[0], y=self.pos_walker[1], z=0.5)
         self.draw_waypoint(carla_point, 'o')
-        carla_point = carla.Location(x=self.pos_car[0], y=self.pos_car[1], z=1)
+        carla_point = carla.Location(x=self.pos_car[0], y=self.pos_car[1], z=0.5)
         self.draw_waypoint(carla_point, 'x')
+
+        self._set_camara_view()
         self.world.tick()
         print("Init success")
-
+        time.sleep(1)
 
     def __spawn_walker(self):
         self.walker_bp = self.blueprint_library.filter('0012')[0]
-        self.walker_spawn_transform = self.spawn_point
-        print(self.walker_spawn_transform)
+        self.walker_spawn_transform = self.spawn_points[0]
         self.walker = self.world.spawn_actor(
             self.walker_bp, self.walker_spawn_transform)
         self.actor_list.append(self.walker)
 
+    def _set_camara_view(self):
+        spectator = self.world.get_spectator()
+
+        location = self.spawn_points[0].location - \
+                   (self.spawn_points[0].location - self.spawn_points[1].location)
+        location.x += 40
+        transform = carla.Transform(location, self.spawn_points[0].rotation)
+
+        # print('cam: ', transform.location)
+        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=40),
+                                                carla.Rotation(pitch=-60)))
+        time.sleep(1)
+
+    def __spawn_car(self):
+        try:
+            tm_port = self.set_tm_seed()
+
+            self.car_bp = self.blueprint_library.filter('vehicle.tesla.model3')[0]
+            self.car_sp = self.spawn_points[1]
+            self.car = self.world.spawn_actor(
+                self.car_bp, self.car_sp)
+            self.actor_list.append(self.car)
+            self.reset_car()
+            self.car.set_autopilot(True, tm_port)
+
+            self.collision_sensor = world.spawn_actor(blueprint_library.find('sensor.other.collision'),
+                                                 carla.Transform(), attach_to=self.car)
+            self.collision_sensor.listen(lambda event: function_handler(event))
+
+
+
+        except:
+            print('spawn car error')
+
     def draw_waypoint(self, location, index, life_time=120.0):
 
         self.world.debug.draw_string(location, str(index), draw_shadow=False,
-                                color=carla.Color(r=255, g=0, b=0), life_time=life_time,
-                                persistent_lines=True)
+                                     color=carla.Color(r=255, g=0, b=0), life_time=life_time,
+                                     persistent_lines=True)
 
     def __reward_calculation(self):
         return -math.dist(self.pos_walker, self.pos_car)
-
+        # distance = math.dist(self.pos_walker, self.pos_car)
+        # better_first = (1-self.tick_count/self.max_tick_count)
+        # if distance > 5:
+        #     self.ticks_near_car -= 1
+        #     return -distance/1000
+        # self.ticks_near_car += 1
+        # return self.ticks_near_car
 
     def step(self, action):
+        # self.set_tm_seed()
+
         action_length = np.linalg.norm(action)
         if action_length == 0.0:
             # the chances are slim, but theoretically both actions could be 0.0
@@ -138,8 +189,10 @@ class CustomEnv(gym.Env):
             unit_action = action
         self.pos_walker = [self.walker.get_transform().location.x,
                            self.walker.get_transform().location.y]
-
+        # self.pos_car
         direction = carla.Vector3D(x=float(unit_action[0]), y=float(unit_action[1]), z=0.0)
+
+        self.pos_car = [self.car.get_transform().location.x, self.car.get_transform().location.y]
 
         walker_control = carla.WalkerControl(
             direction, speed=self.max_walking_speed)
@@ -151,10 +204,12 @@ class CustomEnv(gym.Env):
         self.tick_count += 1
         ##############
 
+
+
         self.reward = self.__reward_calculation()
         if self.reward > -5:
-            self.reward = 5
-            self.done = True
+            ...
+            # self.done = True
         if self.tick_count >= self.max_tick_count:
             self.done = True
 
@@ -166,63 +221,65 @@ class CustomEnv(gym.Env):
         # print("observation:", observation)
         return observation, self.reward, self.done, self.info
 
-    def reset(self):
-        #TODO
-        self.observation = self.spawn_point
+    def set_tm_seed(self):
+        seed_value = 123
+        tm = self.client.get_trafficmanager(8000)
+        tm_port = tm.get_port()
+        tm.set_random_device_seed(seed_value)
+        return tm_port
 
+    def function_handler(event):
+        actor_we_collide_against = event.other_actor
+        impulse = event.normal_impulse
+        intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
+        print("Hit!!!")
+
+    def reset(self):
+        # TODO
+        self.observation = self.spawn_points[0]
         self.tick_count = 0
         self.reward = 0
+        self.ticks_near_car = 0
         self.done = False
         self.info = {}
         self.pos_car = self.pos_car_default
         self.pos_walker = self.pos_walker_default
-        carla_point = carla.Location(x=self.pos_walker[0], y=self.pos_walker[1], z=1)
-        self.walker.set_location(carla_point)
+        # carla_point = carla.Location(x=self.pos_walker[0], y=self.pos_walker[1], z=1)
+        self.walker.set_location(self.spawn_points[0].location)
+        try:
+            self.reset_car()
+            tm_port = self.set_tm_seed()
+            self.car.set_autopilot(True, tm_port)
+        except:
+            print("Reset Error")
+
         self.world.tick()  # this has to be the last line in reset
         observation = self.pos_car + self.pos_walker
         observation = np.array(observation)
         return observation
 
-    # def render(self, mode='human'):
-    #     ...
-    def close (self):
+    def reset_car(self):
+        # try:
+        #    Autopilot off???
+        #     print(self.car.destroy())
+        #     self.__spawn_car()
+        # except:
+        #     print("nooooo")
+        self.car.set_transform(self.spawn_points[1])
+
+        self.car.steer = 0.0
+        self.car.throttle = 0.1
+        self.car.brake = 0.0
+        self.car.hand_brake = False
+        self.car.reverse = False
+        self.car.manual_gear_shift = False
+        self.car.gear = 0
+
+    def close(self):
         self.client = carla.Client(self.host, 2000)
         self.client.set_timeout(60.0)
         self.client.apply_batch([carla.command.DestroyActor(x)
-                                for x in self.actor_list])
+                                 for x in self.actor_list])
 
         # tick for changes to take effect
         self.world.tick()
-
-
-def manual_iteration(env, number_of_iterations=1):
-    """iterate manually over the environment"""
-    print(env.reset())
-    for i in range(number_of_iterations):
-        # print("Sample:", env.action_space.sample())
-        observation, reward, done, info = env.step(env.action_space.sample())
-        print("Reward, Info:", reward, info)
-        # env.render()
-        time.sleep(0.5)
-    env.close()
-
-
-# def destroy_actors():
-#     client = carla.Client('localhost', 2000)
-#     client.set_timeout(10.0)
-#     world = client.get_world()
-#     actor_list = world.get_actors()
-#     for actor in actor_list:
-#         print(actor)
-#         if str(actor.type_id).startswith('walker.pedestrian.'):
-#             print(actor, actor.destroy())
-#     print('actors killed')
-if __name__ == '__main__':
-
-    env = CustomEnv()
-    # env_checker.check_env(env)
-    print("checked?")
-    manual_iteration(env, number_of_iterations=10)
-
-
-
