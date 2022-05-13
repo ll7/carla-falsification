@@ -4,6 +4,7 @@ import gym
 from time import sleep
 import tensorflow as tf
 import datetime
+from typing import Callable
 
 from stable_baselines3.common.logger import configure
 
@@ -23,8 +24,9 @@ class CustomCallback(BaseCallback):
     :param verbose: (int) Verbosity level 0: not output 1: info 2: debug
     """
 
-    def __init__(self, verbose=0):
+    def __init__(self, time_steps_per_training, verbose=0):
         super(CustomCallback, self).__init__(verbose)
+        self.log_interval = time_steps_per_training
         # Those variables will be accessible in the callback
         # (they are defined in the base class)
         # The RL model
@@ -60,12 +62,12 @@ class CustomCallback(BaseCallback):
         :return: (bool) If the callback returns False, training is aborted early.
         """
 
-        if self.n_calls % 100 == 0:
+        if self.n_calls % self.log_interval == 0:
             try:
                 log_reward = self.locals['infos'][0]['episode']['r']
-                if (self.best_result < log_reward):
+                if (self.best_result > log_reward):
                     self.best_result = log_reward
-                print(self.n_calls, ':', log_reward)
+                print(self.n_calls/self.log_interval, ':', log_reward)
                 self.logger.record('Log_Reward', log_reward)
             except:
                 ...
@@ -81,70 +83,84 @@ class CustomCallback(BaseCallback):
         """
         pass
 
+def linear_schedule(initial_value: float) -> Callable[[float], float]:
+    """
+    Linear learning rate schedule.
 
-def eazy_env():
-    env = CustomEnv()
+    :param initial_value: Initial learning rate.
+    :return: schedule that computes
+      current learning rate depending on remaining progress
+    """
+    def func(progress_remaining: float) -> float:
+        """
+        Progress will decrease from 1 (beginning) to 0.
+
+        :param progress_remaining:
+        :return: current learning rate
+        """
+        return progress_remaining * initial_value
+
+    return func
+
+def carla_training(training_steps, time_steps_per_training):
+    env = CustomEnv(time_steps_per_training)
 
     tmp_path = "./tmp/CartPole_DQN"
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
-    model = PPO('MlpPolicy', env, verbose=2, n_steps=2000, batch_size=100)
+    model = PPO('MlpPolicy', env,
+                learning_rate=0.0003,
+                n_steps=training_steps*time_steps_per_training,
+                batch_size=time_steps_per_training,
+                n_epochs=10,
+                gamma=0.99,
+                gae_lambda=0.95,
+                clip_range=0.2,
+                clip_range_vf=None,
+                normalize_advantage=True,
+                ent_coef=0.0,
+                vf_coef=0.5,
+                max_grad_norm=0.5,
+                use_sde=False,
+                sde_sample_freq=- 1,
+                target_kl=None,
+                tensorboard_log=None,
+                create_eval_env=False,
+                policy_kwargs=None,
+                verbose=2,
+                seed=0,
+                device='auto',
+                _init_setup_model=True)
+
     model.set_logger(new_logger)
     obs = env.reset()
-    rewards = 0
-    for _ in range(100):
-        action, _states = model.predict(obs, deterministic=True)
-        obs, reward, done, info = env.step(action)
-        rewards += reward
-        # env.render()
-        if done:
-            print("first:", rewards)
-            rewards = 0
-            obs = env.reset()
 
-    model.learn(total_timesteps=int(100), log_interval=50, callback=CustomCallback(),
-                reset_num_timesteps=True)
-    # for i in range(1):
-    #     print("Run ", i)
-    #     model.learn(total_timesteps=int(100), log_interval=50, callback=CustomCallback(),
-    #                 reset_num_timesteps=True)
+    # rewards = 0
+    # for _ in range(time_steps_per_training):
+    #     action, _states = model.predict(obs, deterministic=True)
+    #     obs, reward, done, info = env.step(action)
+    #     rewards += reward
+    #     # env.render()
+    #     if done:
+    #         print("first:", rewards)
+    #         rewards = 0
+    #         obs = env.reset()
+
+    model.learn(total_timesteps=int(time_steps_per_training),
+                callback=CustomCallback(time_steps_per_training))
+
+    # model.learn(10, callback=None, log_interval=1, eval_env=None, eval_freq=- 1,
+    #       n_eval_episodes=5, tb_log_name='PPO', eval_log_path=None, reset_num_timesteps=True)
 
     model.save("./tmp/myModel")
 
     obs = env.reset()
     rewards = 0
-    for _ in range(env.max_tick_count):
-        action, _states = model.predict(obs, deterministic=True)
+    for _ in range(time_steps_per_training):
+        action, _states = model.predict(obs)
         obs, reward, done, info = env.step(action)
         rewards += reward
         # env.render()
-        sleep(0.2)
-        if done:
-            print("last:", rewards)
-            rewards = 0
-            obs = env.close()
-            break
-
-
-def sec_env():
-    env = CustomEnv()
-    LOG_DIR = './tmp/train/logs/'
-    model = PPO('MlpPolicy', env, tensorboard_log=LOG_DIR, verbose=1)
-    new_logger = configure(LOG_DIR, ["stdout", "tensorboard"])
-
-    obs = env.reset()
-    rewards = 0
-    model.learn(total_timesteps=10, callback=CustomCallback())
-
-    model.set_logger(new_logger)
-    # model.save("./tmp/CartPole_DQN_model")
-
-    obs = env.reset()
-    rewards = 0
-    for _ in range(env.max_tick_count):
-        action, _states = model.predict(obs, deterministic=True)
-        obs, reward, done, info = env.step(action)
-        rewards += reward
         sleep(0.1)
         if done:
             print("last:", rewards)
@@ -153,4 +169,8 @@ def sec_env():
             break
 
 
-eazy_env()
+if __name__ == '__main__':
+    training_steps = 3
+    time_steps_per_training = 250
+
+    carla_training(training_steps, time_steps_per_training)

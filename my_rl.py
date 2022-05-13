@@ -30,7 +30,7 @@ import copy
 class CustomEnv(gym.Env):
     """Custom Environment that follows gym interface"""
 
-    def __init__(self):
+    def __init__(self, time_steps_per_training):
         super(CustomEnv, self).__init__()
         # Define action and observation space
         # They must be gym.spaces objects
@@ -46,7 +46,7 @@ class CustomEnv(gym.Env):
 
         self.done = False
         self.reward = -100
-        self.max_tick_count = 100
+        self.max_tick_count = time_steps_per_training
         self.ticks_near_car = 0
 
         # === Carla ===
@@ -64,7 +64,7 @@ class CustomEnv(gym.Env):
         if not self.map.name.endswith(self.town):
             self.world = self.client.load_world(self.town)
             while not self.world.get_map().name.endswith(self.town):
-                time.sleep(0.5)
+                time.sleep(0.2)
             self.world = self.client.get_world()
             self.map = self.world.get_map()
         time.sleep(5)
@@ -73,9 +73,27 @@ class CustomEnv(gym.Env):
         # https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/#fixed-time-step
         # https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/#client-server-synchrony
         self.settings = self.world.get_settings()
-        self.settings.fixed_delta_seconds = 1
         self.settings.synchronous_mode = True  # Enables synchronous mode
+        self.settings.fixed_delta_seconds = 0.05
         self.world.apply_settings(self.settings)
+
+        #Needed?
+        # self.client.reload_world(False)
+
+        # Set up the traffic manager
+        self.traffic_manager = self.client.get_trafficmanager(8000)
+        self.traffic_manager.set_synchronous_mode(True)
+        self.traffic_manager.set_random_device_seed(0)  # define TM seed for determinism
+
+
+
+        # === Render Mode ===
+        # settings = world.get_settings()
+        # settings.no_rendering_mode = True
+        # world.apply_settings(settings)
+        # ...
+        # settings.no_rendering_mode = False
+        # world.apply_settings(settings)
 
         # === Spawn Points ===
         # 1. Spawn Point for Walker, 2. for Car
@@ -116,7 +134,9 @@ class CustomEnv(gym.Env):
         self._set_camara_view()
         self.world.tick()
         print("Init success")
-        time.sleep(1)
+        time.sleep(0.2)
+
+        self.extraReward = 0
 
     def __spawn_walker(self):
         self.walker_bp = self.blueprint_library.filter('0012')[0]
@@ -125,18 +145,40 @@ class CustomEnv(gym.Env):
             self.walker_bp, self.walker_spawn_transform)
         self.actor_list.append(self.walker)
 
+        try:
+            self.collision_sensor = self.world.spawn_actor(
+                self.blueprint_library.find('sensor.other.collision'),
+                carla.Transform(), attach_to=self.walker)
+        except:
+            print("collision sensor failed")
+
+
     def _set_camara_view(self):
+
+
+        # # ========== Whole View
+        # spectator = self.world.get_spectator()
+        #
+        # location = self.spawn_points[0].location - \
+        #            (self.spawn_points[0].location - self.spawn_points[1].location)
+        # location.x += -20
+        # transform = carla.Transform(location, self.spawn_points[0].rotation)
+        #
+        # # print('cam: ', transform.location)
+        # spectator.set_transform(carla.Transform(transform.location + carla.Location(z=80),
+        #                                         carla.Rotation(pitch=-60)))
+        # time.sleep(0.1)
+
+        # ========== Walker View
         spectator = self.world.get_spectator()
 
-        location = self.spawn_points[0].location - \
-                   (self.spawn_points[0].location - self.spawn_points[1].location)
-        location.x += 40
+        location = carla.Location(x=143.119980, y=326.970001, z=0.300000)
         transform = carla.Transform(location, self.spawn_points[0].rotation)
 
         # print('cam: ', transform.location)
         spectator.set_transform(carla.Transform(transform.location + carla.Location(z=40),
                                                 carla.Rotation(pitch=-60)))
-        time.sleep(1)
+        time.sleep(0.1)
 
     def __spawn_car(self):
         try:
@@ -147,17 +189,36 @@ class CustomEnv(gym.Env):
             self.car = self.world.spawn_actor(
                 self.car_bp, self.car_sp)
             self.actor_list.append(self.car)
-            self.reset_car()
+
+
+            # self.car.apply_control(carla.VehicleControl(throttle=1.0, steer=0.0))
+            # self.car.steer = 0.0
+            # self.car.throttle = 1.0
+            # self.car.brake = 0.0
+            # self.car.hand_brake = False
+            # self.car.reverse = False
+            # self.car.manual_gear_shift = False
+            # self.car.gear = 0
+
             self.car.set_autopilot(True, tm_port)
-
-            self.collision_sensor = world.spawn_actor(blueprint_library.find('sensor.other.collision'),
-                                                 carla.Transform(), attach_to=self.car)
-            self.collision_sensor.listen(lambda event: function_handler(event))
-
-
-
         except:
             print('spawn car error')
+
+        try:
+            self.collision_sensor = self.world.spawn_actor(
+                self.blueprint_library.find('sensor.other.collision'),
+                carla.Transform(), attach_to=self.car)
+            self.collision_sensor.listen(lambda event: self.function_handler(event))
+        except:
+            print("collision sensor failed")
+
+        try:
+            if self.tick_count == 20:
+                print(self.car.get_physics_control())
+            if self.tick_count == 40:
+                print(self.car.get_physics_control())
+        except:
+            print("Nope")
 
     def draw_waypoint(self, location, index, life_time=120.0):
 
@@ -166,7 +227,11 @@ class CustomEnv(gym.Env):
                                      persistent_lines=True)
 
     def __reward_calculation(self):
-        return -math.dist(self.pos_walker, self.pos_car)
+        reward = -math.dist(self.pos_walker, self.pos_car)+self.extraReward
+        # if self.extraReward > 0:
+        #     print(reward)
+        return reward
+
         # distance = math.dist(self.pos_walker, self.pos_car)
         # better_first = (1-self.tick_count/self.max_tick_count)
         # if distance > 5:
@@ -189,7 +254,6 @@ class CustomEnv(gym.Env):
             unit_action = action
         self.pos_walker = [self.walker.get_transform().location.x,
                            self.walker.get_transform().location.y]
-        # self.pos_car
         direction = carla.Vector3D(x=float(unit_action[0]), y=float(unit_action[1]), z=0.0)
 
         self.pos_car = [self.car.get_transform().location.x, self.car.get_transform().location.y]
@@ -202,14 +266,12 @@ class CustomEnv(gym.Env):
         #### TICK ####
         self.world.tick()
         self.tick_count += 1
+        # time.sleep(0.0001)
         ##############
 
-
-
         self.reward = self.__reward_calculation()
-        if self.reward > -5:
-            ...
-            # self.done = True
+        if self.reward > 0:
+            self.done = True
         if self.tick_count >= self.max_tick_count:
             self.done = True
 
@@ -222,23 +284,27 @@ class CustomEnv(gym.Env):
         return observation, self.reward, self.done, self.info
 
     def set_tm_seed(self):
-        seed_value = 123
+        seed_value = 0
         tm = self.client.get_trafficmanager(8000)
         tm_port = tm.get_port()
         tm.set_random_device_seed(seed_value)
         return tm_port
 
-    def function_handler(event):
+    def function_handler(self, event):
         actor_we_collide_against = event.other_actor
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
-        print("Hit!!!")
+        self.extraReward = (intensity + 10) ** 2
+        # if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
+        #     print("Hit with", self.extraReward, "Extra Points")
+        if intensity > 0:
+            print("Good Hit")
 
     def reset(self):
-        # TODO
         self.observation = self.spawn_points[0]
         self.tick_count = 0
         self.reward = 0
+        self.extraReward = 0
         self.ticks_near_car = 0
         self.done = False
         self.info = {}
@@ -248,8 +314,6 @@ class CustomEnv(gym.Env):
         self.walker.set_location(self.spawn_points[0].location)
         try:
             self.reset_car()
-            tm_port = self.set_tm_seed()
-            self.car.set_autopilot(True, tm_port)
         except:
             print("Reset Error")
 
@@ -259,21 +323,11 @@ class CustomEnv(gym.Env):
         return observation
 
     def reset_car(self):
-        # try:
-        #    Autopilot off???
-        #     print(self.car.destroy())
-        #     self.__spawn_car()
-        # except:
-        #     print("nooooo")
-        self.car.set_transform(self.spawn_points[1])
-
-        self.car.steer = 0.0
-        self.car.throttle = 0.1
-        self.car.brake = 0.0
-        self.car.hand_brake = False
-        self.car.reverse = False
-        self.car.manual_gear_shift = False
-        self.car.gear = 0
+        tm_port = self.set_tm_seed()
+        self.car.set_autopilot(False, tm_port)
+        self.collision_sensor.destroy()
+        self.car.destroy()
+        self.__spawn_car()
 
     def close(self):
         self.client = carla.Client(self.host, 2000)
@@ -282,4 +336,5 @@ class CustomEnv(gym.Env):
                                  for x in self.actor_list])
 
         # tick for changes to take effect
+        self.world.tick()
         self.world.tick()
