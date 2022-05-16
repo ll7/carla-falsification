@@ -144,7 +144,7 @@ class CustomEnv(gym.Env):
         self.walker = self.world.spawn_actor(
             self.walker_bp, self.walker_spawn_transform)
         self.actor_list.append(self.walker)
-
+        # self.walker.set_transform(self.spawn_points[0])
         try:
             self.collision_sensor = self.world.spawn_actor(
                 self.blueprint_library.find('sensor.other.collision'),
@@ -227,7 +227,7 @@ class CustomEnv(gym.Env):
         reward = reward / 500
         # if self.extraReward > 0:
         #     print(reward)
-        return reward + self.extraReward
+        return 0.1 - reward + self.extraReward
 
         # distance = math.dist(self.pos_walker, self.pos_car)
         # better_first = (1-self.tick_count/self.max_tick_count)

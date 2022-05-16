@@ -23,7 +23,7 @@ def eazy_env():
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
     # model = PPO.load("./tmp/myModel", env=env)
     time.sleep(0.3)
-    model = PPO.load("./tmp/Callback-25.837323", env=env)
+    model = PPO.load("./tmp/crash01.zip", env=env)
     # model.set_random_seed(123)
     time.sleep(0.3)
     obs = env.reset()

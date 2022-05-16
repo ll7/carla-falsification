@@ -50,6 +50,7 @@ class CustomCallback(BaseCallback):
         This method is called before the first rollout starts.
         """
         self.best_result = -9999
+        self.print_results = 3
         pass
 
     def _on_step(self) -> bool:
@@ -69,8 +70,12 @@ class CustomCallback(BaseCallback):
                 self.logger.record('Log_Reward', log_reward)
                 try:
                     if log_reward > self.best_result:
-                        print(self.n_calls/self.log_interval, ':', log_reward)
-                        self.model.save("./tmp/Callback"+str(log_reward))
+                        print(self.n_calls / self.log_interval, ':', log_reward)
+
+                        if self.print_results > 0 and log_reward > -25:
+                            self.model.save("./tmp/Callback" + str(log_reward))
+                            self.print_results = self.print_results - 1
+
                         self.best_result = log_reward
                 except:
                     print("save faild")
@@ -88,6 +93,7 @@ class CustomCallback(BaseCallback):
         """
         pass
 
+
 def linear_schedule(initial_value: float) -> Callable[[float], float]:
     """
     Linear learning rate schedule.
@@ -96,6 +102,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     :return: schedule that computes
       current learning rate depending on remaining progress
     """
+
     def func(progress_remaining: float) -> float:
         """
         Progress will decrease from 1 (beginning) to 0.
@@ -107,6 +114,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 
     return func
 
+
 def carla_training(training_steps, time_steps_per_training):
     env = CustomEnv(time_steps_per_training)
 
@@ -117,7 +125,7 @@ def carla_training(training_steps, time_steps_per_training):
                 # learning_rate=0.03,
                 n_steps=time_steps_per_training,
                 batch_size=time_steps_per_training,
-                n_epochs=1000,
+                n_epochs=300,
                 # gamma=0.99,
                 # gae_lambda=0.95,
                 # clip_range=0.2,
@@ -129,7 +137,7 @@ def carla_training(training_steps, time_steps_per_training):
                 # use_sde=False,
                 # sde_sample_freq=- 1,
                 # target_kl=None,
-                tensorboard_log="./ppo_tensorlog/",
+                tensorboard_log="./ppo_tensorlog/1/",
                 # create_eval_env=False,
                 # policy_kwargs=None,
                 verbose=2,
@@ -141,9 +149,9 @@ def carla_training(training_steps, time_steps_per_training):
     model.set_logger(new_logger)
     obs = env.reset()
 
-    model.learn(total_timesteps=int(time_steps_per_training*training_steps),
+    model.learn(total_timesteps=int(time_steps_per_training * training_steps),
                 callback=CustomCallback(time_steps_per_training),
-                tb_log_name='PPO_Log', log_interval=5)
+                tb_log_name='PPO_Log', log_interval=1)
 
     # model.learn(10, callback=None, log_interval=1, eval_env=None, eval_freq=- 1,
     #       n_eval_episodes=5, tb_log_name='PPO', eval_log_path=None, reset_num_timesteps=True)
@@ -160,7 +168,7 @@ def first_training(training_steps, time_steps_per_training):
     model = PPO('MlpPolicy', env, verbose=2)
     model.set_logger(new_logger)
     # render_model(model, env)
-    model.learn(total_timesteps=int(training_steps*time_steps_per_training),
+    model.learn(total_timesteps=int(training_steps * time_steps_per_training),
                 log_interval=time_steps_per_training,
                 callback=CustomCallback(time_steps_per_training))
     model.save("./tmp/CartPole_DQN_model")
@@ -178,9 +186,8 @@ def render_model(model, env, time_sleep=0.05):
         # env.render()
         sleep(time_sleep)
         if done:
-            print("last:", rewards)
             break
-    return reward
+    return rewards
 
 
 if __name__ == '__main__':
