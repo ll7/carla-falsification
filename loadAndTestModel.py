@@ -17,12 +17,15 @@ sys.path.append(".")
 
 
 def eazy_env():
-    env = CustomEnv()
+    env = CustomEnv(300)
 
     tmp_path = "./tmp/CartPole_DQN"
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
-    model = PPO.load("./tmp/myModel", env=env)
-
+    # model = PPO.load("./tmp/myModel", env=env)
+    time.sleep(0.3)
+    model = PPO.load("./tmp/Callback-25.837323", env=env)
+    # model.set_random_seed(123)
+    time.sleep(0.3)
     obs = env.reset()
     rewards = 0
     for i in range(10):
@@ -32,9 +35,9 @@ def eazy_env():
             rewards += reward
             # env.render()
             if i > 0:
-                sleep(0.1)
+                sleep(0.01)
             if done:
-                print("last:", rewards)
+                print("Reward:", rewards)
                 rewards = 0
                 env.reset()
                 break

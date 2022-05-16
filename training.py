@@ -65,15 +65,20 @@ class CustomCallback(BaseCallback):
         if self.n_calls % self.log_interval == 0:
             try:
                 log_reward = self.locals['infos'][0]['episode']['r']
-                if (self.best_result > log_reward):
-                    self.best_result = log_reward
-                print(self.n_calls/self.log_interval, ':', log_reward)
+                # print(self.n_calls/self.log_interval, ':', log_reward)
                 self.logger.record('Log_Reward', log_reward)
+                try:
+                    if log_reward > self.best_result:
+                        print(self.n_calls/self.log_interval, ':', log_reward)
+                        self.model.save("./tmp/Callback"+str(log_reward))
+                        self.best_result = log_reward
+                except:
+                    print("save faild")
             except:
                 ...
 
-            value = np.random.random()
-            self.logger.record('random_value', value)
+            # value = np.random.random()
+            # self.logger.record('random_value', value)
 
         return True
 
@@ -109,68 +114,78 @@ def carla_training(training_steps, time_steps_per_training):
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
     model = PPO('MlpPolicy', env,
-                learning_rate=0.0003,
-                n_steps=training_steps*time_steps_per_training,
+                # learning_rate=0.03,
+                n_steps=time_steps_per_training,
                 batch_size=time_steps_per_training,
-                n_epochs=10,
-                gamma=0.99,
-                gae_lambda=0.95,
-                clip_range=0.2,
-                clip_range_vf=None,
-                normalize_advantage=True,
-                ent_coef=0.0,
-                vf_coef=0.5,
-                max_grad_norm=0.5,
-                use_sde=False,
-                sde_sample_freq=- 1,
-                target_kl=None,
-                tensorboard_log=None,
-                create_eval_env=False,
-                policy_kwargs=None,
+                n_epochs=1000,
+                # gamma=0.99,
+                # gae_lambda=0.95,
+                # clip_range=0.2,
+                # clip_range_vf=None,
+                # normalize_advantage=True,
+                # ent_coef=0.0,
+                # vf_coef=0.5,
+                # max_grad_norm=0.5,
+                # use_sde=False,
+                # sde_sample_freq=- 1,
+                # target_kl=None,
+                tensorboard_log="./ppo_tensorlog/",
+                # create_eval_env=False,
+                # policy_kwargs=None,
                 verbose=2,
-                seed=0,
+                seed=123,
                 device='auto',
-                _init_setup_model=True)
+                _init_setup_model=True
+                )
 
     model.set_logger(new_logger)
     obs = env.reset()
 
-    # rewards = 0
-    # for _ in range(time_steps_per_training):
-    #     action, _states = model.predict(obs, deterministic=True)
-    #     obs, reward, done, info = env.step(action)
-    #     rewards += reward
-    #     # env.render()
-    #     if done:
-    #         print("first:", rewards)
-    #         rewards = 0
-    #         obs = env.reset()
-
-    model.learn(total_timesteps=int(time_steps_per_training),
-                callback=CustomCallback(time_steps_per_training))
+    model.learn(total_timesteps=int(time_steps_per_training*training_steps),
+                callback=CustomCallback(time_steps_per_training),
+                tb_log_name='PPO_Log', log_interval=5)
 
     # model.learn(10, callback=None, log_interval=1, eval_env=None, eval_freq=- 1,
     #       n_eval_episodes=5, tb_log_name='PPO', eval_log_path=None, reset_num_timesteps=True)
 
     model.save("./tmp/myModel")
+    print('Reward:', render_model(model, env))
+    env.close()
 
+
+def first_training(training_steps, time_steps_per_training):
+    tmp_path = "./tmp/CartPole_DQN"
+    new_logger = configure(tmp_path, ["tensorboard", "stdout"])
+    env = CustomEnv(time_steps_per_training)
+    model = PPO('MlpPolicy', env, verbose=2)
+    model.set_logger(new_logger)
+    # render_model(model, env)
+    model.learn(total_timesteps=int(training_steps*time_steps_per_training),
+                log_interval=time_steps_per_training,
+                callback=CustomCallback(time_steps_per_training))
+    model.save("./tmp/CartPole_DQN_model")
+    render_model(model, env)
+    env.close()
+
+
+def render_model(model, env, time_sleep=0.05):
     obs = env.reset()
     rewards = 0
-    for _ in range(time_steps_per_training):
-        action, _states = model.predict(obs)
+    for _ in range(env.max_tick_count):
+        action, _states = model.predict(obs, deterministic=True)
         obs, reward, done, info = env.step(action)
         rewards += reward
         # env.render()
-        sleep(0.1)
+        sleep(time_sleep)
         if done:
             print("last:", rewards)
-            rewards = 0
-            obs = env.close()
             break
+    return reward
 
 
 if __name__ == '__main__':
-    training_steps = 3
-    time_steps_per_training = 250
+    training_steps = 100
+    time_steps_per_training = 300
 
     carla_training(training_steps, time_steps_per_training)
+    # first_training(training_steps, time_steps_per_training)

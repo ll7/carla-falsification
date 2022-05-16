@@ -172,12 +172,14 @@ class CustomEnv(gym.Env):
         # ========== Walker View
         spectator = self.world.get_spectator()
 
-        location = carla.Location(x=143.119980, y=326.970001, z=0.300000)
+        location = self.spawn_points[0].location
+        # 60 Grod Location
+        # location = carla.Location(x=143.119980, y=326.970001, z=0.300000)
         transform = carla.Transform(location, self.spawn_points[0].rotation)
 
         # print('cam: ', transform.location)
-        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=40),
-                                                carla.Rotation(pitch=-60)))
+        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=50),
+                                                carla.Rotation(pitch=-90)))
         time.sleep(0.1)
 
     def __spawn_car(self):
@@ -212,14 +214,6 @@ class CustomEnv(gym.Env):
         except:
             print("collision sensor failed")
 
-        try:
-            if self.tick_count == 20:
-                print(self.car.get_physics_control())
-            if self.tick_count == 40:
-                print(self.car.get_physics_control())
-        except:
-            print("Nope")
-
     def draw_waypoint(self, location, index, life_time=120.0):
 
         self.world.debug.draw_string(location, str(index), draw_shadow=False,
@@ -227,10 +221,13 @@ class CustomEnv(gym.Env):
                                      persistent_lines=True)
 
     def __reward_calculation(self):
-        reward = -math.dist(self.pos_walker, self.pos_car)+self.extraReward
+        reward = -math.dist(self.pos_walker, self.pos_car)
+        if self.tick_count > self.max_tick_count/4:
+            reward = reward * 2
+        reward = reward / 500
         # if self.extraReward > 0:
         #     print(reward)
-        return reward
+        return reward + self.extraReward
 
         # distance = math.dist(self.pos_walker, self.pos_car)
         # better_first = (1-self.tick_count/self.max_tick_count)
@@ -242,6 +239,11 @@ class CustomEnv(gym.Env):
 
     def step(self, action):
         # self.set_tm_seed()
+
+        ### Debug
+        # if self.tick_count == 0:
+        #     print('walker:', self.walker.get_transform())
+        #     print('car', self.car.get_transform())
 
         action_length = np.linalg.norm(action)
         if action_length == 0.0:
@@ -266,12 +268,11 @@ class CustomEnv(gym.Env):
         #### TICK ####
         self.world.tick()
         self.tick_count += 1
-        # time.sleep(0.0001)
         ##############
 
         self.reward = self.__reward_calculation()
-        if self.reward > 0:
-            self.done = True
+        # if self.reward > 0:
+        #     self.done = True
         if self.tick_count >= self.max_tick_count:
             self.done = True
 
@@ -294,9 +295,10 @@ class CustomEnv(gym.Env):
         actor_we_collide_against = event.other_actor
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
-        self.extraReward = (intensity + 10) ** 2
-        # if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
-        #     print("Hit with", self.extraReward, "Extra Points")
+        self.extraReward = (intensity/10 + 0.1) ** 2
+        if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
+            self.extraReward = self.extraReward + 1
+            print("Hit with", self.extraReward, "Extra Points")
         if intensity > 0:
             print("Good Hit")
 
@@ -311,7 +313,8 @@ class CustomEnv(gym.Env):
         self.pos_car = self.pos_car_default
         self.pos_walker = self.pos_walker_default
         # carla_point = carla.Location(x=self.pos_walker[0], y=self.pos_walker[1], z=1)
-        self.walker.set_location(self.spawn_points[0].location)
+        # self.walker.set_location(self.spawn_points[0].location)
+        self.walker.set_transform(self.spawn_points[0])
         try:
             self.reset_car()
         except:
