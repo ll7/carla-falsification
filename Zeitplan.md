@@ -10,7 +10,6 @@
 - Einlesen Rewards 
 - Weitere Einarbeitung in RL 
 
-<hr>
 
 ### KW 17-18:
 - Erstellung eines Scenarios in Carla 
@@ -21,15 +20,22 @@
 - Sinnvoller Kollisionsreward finden
 
 ### KW 21-22:
-- Modelle/ Reward verbessern 
+- RTX 3080TI zum laufen bringen
+
+<hr>
+
+### KW 23-24
+- Env überprüfen
+- Determinismus überprüfen
+- Eigentschaften Model betrachten 
+- Reward verbessern 
+- Obs Space erweitern 
+- (Action Space)
+
+### ToDo 
 - Weitere Scenarien hinzufuegen 
-- Weitere Maps hinzufuegen 
-
-### KW 23:
-- Optuna versuchen und effizienter zu werden 
+- (Optuna versuchen und effizienter zu werden)
 - Abschlusspraesentation erstellen
+- Weitere Maps hinzufuegen 
 - Doku
-
-### KW 24:
-- Reserve 
 - Abschlusspraesentation
