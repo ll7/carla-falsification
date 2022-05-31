@@ -46,6 +46,7 @@ class CustomEnv(gym.Env):
 
         self.done = False
         self.reward = -100
+        self.tick_count = 0
         self.max_tick_count = time_steps_per_training
         self.ticks_near_car = 0
 
@@ -239,7 +240,6 @@ class CustomEnv(gym.Env):
 
     def step(self, action):
         # self.set_tm_seed()
-
         ### Debug
         # if self.tick_count == 0:
         #     print('walker:', self.walker.get_transform())
@@ -310,11 +310,7 @@ class CustomEnv(gym.Env):
         self.ticks_near_car = 0
         self.done = False
         self.info = {}
-        self.pos_car = self.pos_car_default
-        self.pos_walker = self.pos_walker_default
-        # carla_point = carla.Location(x=self.pos_walker[0], y=self.pos_walker[1], z=1)
-        # self.walker.set_location(self.spawn_points[0].location)
-        self.walker.set_transform(self.spawn_points[0])
+        self.reset_walker()
         try:
             self.reset_car()
         except:
@@ -324,11 +320,25 @@ class CustomEnv(gym.Env):
         observation = self.pos_car + self.pos_walker
         observation = np.array(observation)
         return observation
+    def reset_walker(self):
+        self.pos_car = self.pos_car_default
+        self.pos_walker = self.pos_walker_default
+        # carla_point = carla.Location(x=self.pos_walker[0], y=self.pos_walker[1], z=1)
+        # self.walker.set_location(self.spawn_points[0].location)
 
+        # location = self.spawn_points[0].location
+        # rotation = self.spawn_points[0].rotation
+        # transform = carla.Transform(location, rotation)
+        # self.walker.set_target_velocity(carla.Vector3D(0,0,0))
+        # self.walker.set_target_angular_velocity(carla.Vector3D(0,0,0))
+        # self.walker.set_transform(transform)
+        self.collision_sensor.destroy()
+        self.walker.destroy()
+        self.__spawn_walker()
     def reset_car(self):
         tm_port = self.set_tm_seed()
         self.car.set_autopilot(False, tm_port)
-        self.collision_sensor.destroy()
+        # self.collision_sensor.destroy()
         self.car.destroy()
         self.__spawn_car()
 
