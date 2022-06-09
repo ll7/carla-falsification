@@ -115,14 +115,14 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     return func
 
 
-def carla_training(training_steps, time_steps_per_training):
+def carla_training(training_steps, time_steps_per_training, log_interall):
     env = CustomEnv(time_steps_per_training)
 
     tmp_path = "./tmp/CartPole_DQN"
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
     model = PPO('MlpPolicy', env,
-                # learning_rate=0.03,
+                # learning_rate=0.01,
                 n_steps=time_steps_per_training,
                 batch_size=time_steps_per_training,
                 n_epochs=300,
@@ -140,7 +140,7 @@ def carla_training(training_steps, time_steps_per_training):
                 tensorboard_log="./ppo_tensorlog/1/",
                 # create_eval_env=False,
                 # policy_kwargs=None,
-                verbose=2,
+                verbose=0,
                 seed=123,
                 device='auto',
                 _init_setup_model=True
@@ -151,13 +151,13 @@ def carla_training(training_steps, time_steps_per_training):
 
     model.learn(total_timesteps=int(time_steps_per_training * training_steps),
                 callback=CustomCallback(time_steps_per_training),
-                tb_log_name='PPO_Log', log_interval=1)
+                tb_log_name='PPO_Log', log_interval=log_interall)
 
     # model.learn(10, callback=None, log_interval=1, eval_env=None, eval_freq=- 1,
     #       n_eval_episodes=5, tb_log_name='PPO', eval_log_path=None, reset_num_timesteps=True)
 
     model.save("./tmp/myModel")
-    print('Reward:', render_model(model, env))
+    # print('Reward:', render_model(model, env))
     env.close()
 
 
@@ -176,7 +176,7 @@ def first_training(training_steps, time_steps_per_training):
     env.close()
 
 
-def render_model(model, env, time_sleep=0.05):
+def render_model(model, env, time_sleep=0.01):
     obs = env.reset()
     rewards = 0
     for _ in range(env.max_tick_count):
@@ -191,8 +191,9 @@ def render_model(model, env, time_sleep=0.05):
 
 
 if __name__ == '__main__':
-    training_steps = 100
+    training_steps = 10000
     time_steps_per_training = 300
+    log_interall = 10
 
-    carla_training(training_steps, time_steps_per_training)
+    carla_training(training_steps, time_steps_per_training, log_interall)
     # first_training(training_steps, time_steps_per_training)
