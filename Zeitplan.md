@@ -24,16 +24,26 @@
 
 <hr>
 
-### KW 23-24
+### KW 23
 - Env überprüfen
 - Determinismus überprüfen
-- Eigentschaften Model betrachten 
 - Reward verbessern 
 - Obs Space erweitern 
 - (Action Space)
 
+### KW 24
+- Eigentschaften Model betrachten 
+- Initialisisung high low/ Eigenschaften Box Bounds 
+- Action Sequenz speichern 
+- Ergebnisse Determinismus zusammenschreiben/ Issue Github
+- Dokumentation 
+- Welche Epochen anzahl ist sinnvoll? 
+
 ### ToDo 
 - Weitere Scenarien hinzufuegen 
+- Learning Rate/ Parameter anpassen 
+- Trainingsverfahren
+- Andere Policy 
 - (Optuna versuchen und effizienter zu werden)
 - Abschlusspraesentation erstellen
 - Weitere Maps hinzufuegen 
