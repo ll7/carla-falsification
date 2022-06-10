@@ -23,27 +23,32 @@ def eazy_env():
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
     # model = PPO.load("./tmp/myModel", env=env)
     time.sleep(0.3)
-    model = PPO.load("./tmp/Callback59.7322", env=env)
+    model = PPO.load("./tmp/myModel10k.zip", env=env)
     # model.set_random_seed(123)
     time.sleep(0.3)
     obs = env.reset()
     rewards = 0
     auswertung = []
-    for i in range(30):
-        for _ in range(env.max_tick_count):
-            action, _states = model.predict(obs, deterministic=True)
+    action1 =  []
+    for i in range(10):
+        for i2 in range(env.max_tick_count):
+            action, _states = model.predict(obs)
+            if i == 0:
+                action1.append(action)
+            else:
+                action = action1[i2]
             obs, reward, done, info = env.step(action)
             rewards += reward
-            # env.render()
-            # if i > 0:
-            #     sleep(0.01)
+            # if 250 < i2 < 260:
+            #
             if done:
-                print("Reward:", rewards)
+                print(rewards, env.walker.get_transform().location)
                 auswertung.append(rewards)
                 rewards = 0
                 env.reset()
+                time.sleep(0.5)
                 break
-
+    print(action1)
     obs = env.close()
 
     import statistics

@@ -168,7 +168,7 @@ class CustomEnv(gym.Env):
         location = self.spawn_points[0].location
         # location = carla.Location(x=143.119980, y=326.970001, z=0.300000)
         transform = carla.Transform(location, self.spawn_points[0].rotation)
-        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=30),
+        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=80),
                                                 carla.Rotation(pitch=-90)))
 
     def __spawn_car(self):
@@ -180,7 +180,7 @@ class CustomEnv(gym.Env):
             self.car_bp, self.car_sp)
         self.actor_list.append(self.car)
 
-        self.car.set_autopilot(False, tm_port)
+        self.car.set_autopilot(True, tm_port)
 
         try:
             self.collision_sensor = self.world.spawn_actor(
@@ -217,7 +217,7 @@ class CustomEnv(gym.Env):
             unit_action = action / action_length
         else:
             unit_action = action
-        unit_action = action
+        # unit_action = action
         # if self.tick_count < 100:
         #     print(self.tick_count, ":", self.walker.get_transform().location, self.walker.get_velocity(), action,
         #           self.walker.get_angular_velocity(), self.walker.get_acceleration(), action_length)

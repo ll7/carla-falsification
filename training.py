@@ -50,7 +50,6 @@ class CustomCallback(BaseCallback):
         This method is called before the first rollout starts.
         """
         self.best_result = -9999
-        self.print_results = 3
         pass
 
     def _on_step(self) -> bool:
@@ -67,15 +66,12 @@ class CustomCallback(BaseCallback):
             try:
                 log_reward = self.locals['infos'][0]['episode']['r']
                 # print(self.n_calls/self.log_interval, ':', log_reward)
-                self.logger.record('Log_Reward', log_reward)
+                self.logger.record('Log_Reward', log_reward/1000)
                 try:
                     if log_reward > self.best_result:
                         print(self.n_calls / self.log_interval, ':', log_reward)
 
-                        if self.print_results > 0 and log_reward > -25:
-                            self.model.save("./tmp/Callback" + str(log_reward))
-                            self.print_results = self.print_results - 1
-
+                        self.model.save("./tmp/Callback" + str(log_reward))
                         self.best_result = log_reward
                 except:
                     print("save faild")
@@ -157,7 +153,7 @@ def carla_training(training_steps, time_steps_per_training, log_interall):
     #       n_eval_episodes=5, tb_log_name='PPO', eval_log_path=None, reset_num_timesteps=True)
 
     model.save("./tmp/myModel")
-    # print('Reward:', render_model(model, env))
+    print('Reward:', render_model(model, env))
     env.close()
 
 
@@ -191,9 +187,9 @@ def render_model(model, env, time_sleep=0.01):
 
 
 if __name__ == '__main__':
-    training_steps = 10000
+    training_steps = 1000
     time_steps_per_training = 300
-    log_interall = 10
+    log_interall = 5
 
     carla_training(training_steps, time_steps_per_training, log_interall)
     # first_training(training_steps, time_steps_per_training)
