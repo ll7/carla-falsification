@@ -22,7 +22,6 @@
 ### KW 21-22:
 - RTX 3080TI zum laufen bringen
 
-<hr>
 
 ### KW 23
 - Env überprüfen
@@ -30,6 +29,8 @@
 - Reward verbessern 
 - Obs Space erweitern 
 - (Action Space)
+
+<hr>
 
 ### KW 24
 - Eigentschaften Model betrachten 
