@@ -139,10 +139,14 @@ class CustomEnv(gym.Env):
         carla_point = carla.Location(x=self.pos_car[0], y=self.pos_car[1], z=0.5)
         self.draw_waypoint(carla_point, 'x')
 
+        self.collisionReward = 0
+        self.info = {"actions": []}
+
+
         self._set_camara_view()
         self.world.tick()
 
-        self.collisionReward = 0
+
 
     def __spawn_walker(self):
         # === Load Blueprint and spawn walker ===
@@ -224,6 +228,7 @@ class CustomEnv(gym.Env):
         direction = carla.Vector3D(x=float(unit_action[0]), y=float(unit_action[1]), z=0.0)
         walker_control = carla.WalkerControl(
             direction, speed=self.max_walking_speed, jump=False)
+        self.info["actions"].append(unit_action.tolist())
         self.walker.apply_control(walker_control)
 
         # === Update position of walker and car
@@ -270,7 +275,7 @@ class CustomEnv(gym.Env):
         self.collisionReward = 0
         self.ticks_near_car = 0
         self.done = False
-        self.info = {}
+        self.info = {"actions":[]}
         self.reset_walker()
         try:
             self.reset_car()
