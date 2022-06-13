@@ -124,7 +124,7 @@ class CustomEnv(gym.Env):
         self.max_walking_speed = 5   # 18/3,6 m/s
         self.pos_walker_default = [self.spawn_points[0].location.x, self.spawn_points[0].location.y]
         self.pos_walker = self.pos_walker_default
-        self.__spawn_walker()
+        self.walker = self.__spawn_walker()
 
         # === car ===
         self.pos_car_default = [self.spawn_points[1].location.x, self.spawn_points[1].location.y]
@@ -141,7 +141,6 @@ class CustomEnv(gym.Env):
 
         self._set_camara_view()
         self.world.tick()
-        time.sleep(0.2)
 
         self.collisionReward = 0
 
@@ -149,17 +148,17 @@ class CustomEnv(gym.Env):
         # === Load Blueprint and spawn walker ===
         self.walker_bp = self.blueprint_library.filter('0012')[0]
         self.walker_spawn_transform = self.spawn_points[0]
-        self.walker = self.world.spawn_actor(
+        walker = self.world.spawn_actor(
             self.walker_bp, self.walker_spawn_transform)
-        self.actor_list.append(self.walker)
+        self.actor_list.append(walker)
         # self.walker.set_transform(self.spawn_points[0])
         try:
             self.collision_sensor = self.world.spawn_actor(
                 self.blueprint_library.find('sensor.other.collision'),
-                carla.Transform(), attach_to=self.walker)
+                carla.Transform(), attach_to=walker)
         except:
             print("collision sensor failed")
-
+        return walker
 
     def _set_camara_view(self):
         # === Walker View Camera ===
@@ -297,7 +296,7 @@ class CustomEnv(gym.Env):
         self.pos_walker = self.pos_walker_default
         self.collision_sensor.destroy()
         self.walker.destroy()
-        self.__spawn_walker()
+        self.walker = self.__spawn_walker()
     def reset_car(self):
         tm_port = self.set_tm_seed()
         self.car.set_autopilot(False, tm_port)
