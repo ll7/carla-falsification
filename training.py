@@ -61,17 +61,28 @@ class CustomCallback(BaseCallback):
 
         :return: (bool) If the callback returns False, training is aborted early.
         """
-
+        # if self.n_calls % self.log_interval == 299:
+        #     print(self.locals['infos'][0]['actions'])
         if self.n_calls % self.log_interval == 0:
+
             try:
                 log_reward = self.locals['infos'][0]['episode']['r']
-                # print(self.n_calls/self.log_interval, ':', log_reward)
                 self.logger.record('Log_Reward', log_reward/1000)
                 try:
                     if log_reward > self.best_result:
                         print(self.n_calls / self.log_interval, ':', log_reward)
 
                         self.model.save("./tmp/Callback" + str(log_reward))
+                        actions = self.locals['infos'][0]['actions']
+                        try:
+                            f = open("./tmp/Actions" + str(log_reward), "w")
+                            print("./tmp/Actions" + str(log_reward))
+                            for action in actions:
+                                f.write("%s\n" % action)
+                            f.close()
+                        except:
+                            print("Save actions failed!")
+                        print(actions)
                         self.best_result = log_reward
                 except:
                     print("save faild")
@@ -187,9 +198,9 @@ def render_model(model, env, time_sleep=0.01):
 
 
 if __name__ == '__main__':
-    training_steps = 1000
+    training_steps = 3
     time_steps_per_training = 300
-    log_interall = 5
+    log_interall = 1
 
     carla_training(training_steps, time_steps_per_training, log_interall)
     # first_training(training_steps, time_steps_per_training)
