@@ -46,8 +46,10 @@ class CustomEnv(gym.Env):
         # === Gym Variables ===
         self.action_space = Box(low=-1, high=1, shape=(2,), dtype=np.float32)
         obs_size = 8
-        high = np.array([-500] * obs_size)
-        low = np.array([500] * obs_size)
+        # high = np.array([-500] * obs_size)
+        high = np.array([500, 500, 500, 500, 50, 50, 50, 50])
+        # low = np.array([500] * obs_size)
+        low = np.array([0, 0, 0, 0, -50, -50, -50, -50])
         self.observation_space = spaces.Box(low=low, high=high,
                                             shape=(obs_size,), dtype=np.float32)
 
@@ -217,9 +219,9 @@ class CustomEnv(gym.Env):
             unit_action = np.array([0.0, 0.0], dtype=np.float32)
         elif action_length > 1.0:
             # create a vector for the action with the length of zero
-            unit_action = action / action_length
+            unit_action = np.array(action / action_length)
         else:
-            unit_action = action
+            unit_action = np.array(action)
         # unit_action = action
         # if self.tick_count < 100:
         #     print(self.tick_count, ":", self.walker.get_transform().location, self.walker.get_velocity(), action,
@@ -290,7 +292,6 @@ class CustomEnv(gym.Env):
 
         get_vel2 = self.car.get_velocity()
         vel_car = [get_vel2.x, get_vel2.y]
-
         observation = self.pos_car + self.pos_walker + vel_walker + vel_car
         observation = np.array(observation)
         return observation

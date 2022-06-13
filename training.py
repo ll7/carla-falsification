@@ -76,13 +76,12 @@ class CustomCallback(BaseCallback):
                         actions = self.locals['infos'][0]['actions']
                         try:
                             f = open("./tmp/Actions" + str(log_reward), "w")
-                            print("./tmp/Actions" + str(log_reward))
                             for action in actions:
                                 f.write("%s\n" % action)
                             f.close()
                         except:
                             print("Save actions failed!")
-                        print(actions)
+                        # print(actions)
                         self.best_result = log_reward
                 except:
                     print("save faild")
@@ -163,7 +162,7 @@ def carla_training(training_steps, time_steps_per_training, log_interall):
     # model.learn(10, callback=None, log_interval=1, eval_env=None, eval_freq=- 1,
     #       n_eval_episodes=5, tb_log_name='PPO', eval_log_path=None, reset_num_timesteps=True)
 
-    model.save("./tmp/myModel")
+    model.save("./tmp/myModel"+time_steps_per_training)
     print('Reward:', render_model(model, env))
     env.close()
 
@@ -198,9 +197,9 @@ def render_model(model, env, time_sleep=0.01):
 
 
 if __name__ == '__main__':
-    training_steps = 3
+    training_steps = 5000
     time_steps_per_training = 300
-    log_interall = 1
+    log_interall = 2
 
     carla_training(training_steps, time_steps_per_training, log_interall)
     # first_training(training_steps, time_steps_per_training)

@@ -19,7 +19,6 @@ sys.path.append(".")
 def test_determinisWalker(ticks, save_path):
     env = CustomEnv(ticks)
     model = PPO.load("../tmp/"+save_path, env=env)
-    time.sleep(0.3)
     obs = env.reset()
     actions = []
     positions = []
@@ -28,7 +27,8 @@ def test_determinisWalker(ticks, save_path):
         action, _states = model.predict(obs, deterministic=True)
         actions.append(action.tolist())
         env.step(action=action)
-    for epoch in range(100):
+    print(actions)
+    for epoch in range(20):
         sprint = True
         env.reset()
         for index, action in enumerate(actions):
@@ -41,7 +41,43 @@ def test_determinisWalker(ticks, save_path):
             print(epoch)
     env.close()
 
+def test_Results(ticks, save_path):
+    env = CustomEnv(ticks)
+    model = PPO.load("../tmp/" + save_path, env=env)
+    obs = env.reset()
+    action1 = []
+    auswertung = []
+    rewards = 0
+    for i in range(10):
+        for i2 in range(env.max_tick_count):
+            action, _states = model.predict(obs, deterministic=True)
+            if i == 0:
+                action1.append(action)
+            else:
+                action = action1[i2]
+            obs, reward, done, info = env.step(action)
+            rewards += reward
+            if done:
+                print(rewards, env.walker.get_transform().location)
+                auswertung.append(rewards)
+                rewards = 0
+                env.reset()
+                time.sleep(0.5)
+                break
+    # print(action1)
+    env.close()
+
+    import statistics
+    mean = statistics.mean(auswertung)
+    max_v = max(auswertung)
+    min_v = min(auswertung)
+    print('max:', max_v, 'min:', min_v, 'mean', mean, 'max-min:',  max_v-min_v)
+
+    mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
+    print(mean_reward, std_reward)
+
 if __name__ == '__main__':
     ticks = 300
-    save_name = "myModel10k.zip"
+    save_name = "myModel.zip"
     test_determinisWalker(ticks, save_name)
+    # test_Results(ticks, save_name)
