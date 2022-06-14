@@ -3,7 +3,7 @@ Some Mistakes can very time consuming although it can be avoided very easily
 ### Versions:
 For RL it is common to use different Frameworks like pyTorch, Keras and others. Some of the Frameworks have dependencies to other Software versions therefore it is really important that you don't just install the latest version of everything and hope that everything is compatible. 
 It is lot more work to properly remove a version rather than directly installing the right one. 
-In my case I had Problems with dependencies between Python, Cuda, pyTorch, and compatible drives for Cara. 
+In my case I had Problems with dependencies between Python, Cuda, pyTorch, and compatible drives for Carla. 
 
 For my Reinforcement Learning setup, I use Ubuntu 20.04 Python 3.8.10, Cuda 11.6, NVidia Driver Version: 510.73.05 and for PytTorch the Preview(Nightly) build for Cuda 11.3.
 The Computer that I use (imech031) have a RTX 3800 Ti and an AMD Ryzen 9 5900X 12-Core Processor

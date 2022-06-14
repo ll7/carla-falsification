@@ -33,20 +33,28 @@
 <hr>
 
 ### KW 24
-- Eigentschaften Model betrachten 
 - Initialisisung high low/ Eigenschaften Box Bounds 
 - Action Sequenz speichern 
-- Ergebnisse Determinismus zusammenschreiben/ Issue Github
-- Dokumentation 
-- Welche Epochen anzahl ist sinnvoll? 
+<br>
 
-### ToDo 
-- Weitere Scenarien hinzufuegen 
+- Eigentschaften Model betrachten 
+- (Ergebnisse Determinismus zusammenschreiben/ Issue Github)
+- Dokumentation 
+
+
+### KW 25+
+- Optuna versuchen und effizienter zu werden
 - Learning Rate/ Parameter anpassen 
+- Welche Epochen anzahl ist sinnvoll? 
 - Trainingsverfahren
 - Andere Policy 
-- (Optuna versuchen und effizienter zu werden)
+- Add Force/ set_target_velocity
+- Weitere Scenarien hinzufuegen 
+- Async Mode testen
+- https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
+
+
+### ToDo 
 - Abschlusspraesentation erstellen
-- Weitere Maps hinzufuegen 
 - Doku
 - Abschlusspraesentation
