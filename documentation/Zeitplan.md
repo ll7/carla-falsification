@@ -33,11 +33,13 @@
 <hr>
 
 ### KW 24
-- Eigentschaften Model betrachten 
 - Initialisisung high low/ Eigenschaften Box Bounds 
 - Action Sequenz speichern 
+
+- Eigentschaften Model betrachten 
 - Ergebnisse Determinismus zusammenschreiben/ Issue Github
 - Dokumentation 
+
 - Welche Epochen anzahl ist sinnvoll? 
 
 ### ToDo 
