@@ -32,7 +32,7 @@ sudo apt-get update # Update the Debian package index
 sudo apt-get install carla-simulator=0.9.13 # Install Carla 0.9.13
 cd /opt/carla-simulator # Open the folder where CARLA is installed
 
-./ImportAssets.sh
+apt-get install libomp5
 
 ### Envirionment 
 
