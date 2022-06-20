@@ -35,5 +35,15 @@ cd /opt/carla-simulator # Open the folder where CARLA is installed
 apt-get install libomp5
 
 ### Envirionment 
+pip3 install gym
+
+pip3 install tensorflow
+
+pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cu113 # https://pytorch.org/get-started/locally/****
+
+pip3 install stable_baselines3
+
+## Start Training: 
+python3 training.py
 
 
