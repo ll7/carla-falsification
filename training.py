@@ -67,7 +67,7 @@ class CustomCallback(BaseCallback):
 
             try:
                 log_reward = self.locals['infos'][0]['episode']['r']
-                self.logger.record('Log_Reward', log_reward/1000)
+                self.logger.record('Log_Reward', log_reward)
                 try:
                     if log_reward > self.best_result:
                         print(self.n_calls / self.log_interval, ':', log_reward)
@@ -121,17 +121,17 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     return func
 
 
-def carla_training(training_steps, time_steps_per_training, log_interall):
+def carla_training(training_steps, time_steps_per_training, log_interall, learning_rate, save_name):
     env = CustomEnv(time_steps_per_training)
 
-    tmp_path = "./tmp/CartPole_DQN"
+    tmp_path = "./tmp/CartPole_DQN/" + str(save_name)
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
     model = PPO('MlpPolicy', env,
-                # learning_rate=0.01,
-                n_steps=time_steps_per_training,
-                batch_size=time_steps_per_training,
-                n_epochs=300,
+                learning_rate=learning_rate,
+                # n_steps=time_steps_per_training,
+                # batch_size=time_steps_per_training,
+                # n_epochs=300,
                 # gamma=0.99,
                 # gae_lambda=0.95,
                 # clip_range=0.2,
@@ -146,39 +146,37 @@ def carla_training(training_steps, time_steps_per_training, log_interall):
                 tensorboard_log="./ppo_tensorlog/1/",
                 # create_eval_env=False,
                 # policy_kwargs=None,
-                verbose=0,
-                seed=123,
-                device='auto',
-                _init_setup_model=True
+                verbose=1,
+                # seed=123,
+                # device='auto',
+                # _init_setup_model=True
                 )
 
     model.set_logger(new_logger)
     obs = env.reset()
-
     model.learn(total_timesteps=int(time_steps_per_training * training_steps),
                 callback=CustomCallback(time_steps_per_training),
                 tb_log_name='PPO_Log', log_interval=log_interall)
 
-    # model.learn(10, callback=None, log_interval=1, eval_env=None, eval_freq=- 1,
-    #       n_eval_episodes=5, tb_log_name='PPO', eval_log_path=None, reset_num_timesteps=True)
-
-    model.save("./tmp/myModel"+str(time_steps_per_training))
+    model.save("./tmp/myModel"+str(save_name))
     print('Reward:', render_model(model, env))
     env.close()
 
 
-def first_training(training_steps, time_steps_per_training):
-    tmp_path = "./tmp/CartPole_DQN"
-    new_logger = configure(tmp_path, ["tensorboard", "stdout"])
+def training_test(training_steps, time_steps_per_training, save_name, log_interall):
     env = CustomEnv(time_steps_per_training)
+    tmp_path = "./tmp/Test_TB/" + str(save_name)
+    new_logger = configure(tmp_path, ["tensorboard", "stdout"])
+
+    # required before you can step the environment
+    env.reset()
+
     model = PPO('MlpPolicy', env, verbose=2)
     model.set_logger(new_logger)
-    # render_model(model, env)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
-                log_interval=time_steps_per_training,
+                log_interval=log_interall,
                 callback=CustomCallback(time_steps_per_training))
-    model.save("./tmp/CartPole_DQN_model")
-    render_model(model, env)
+    model.save("./tmp/test_Model"+str(save_name))
     env.close()
 
 
@@ -198,8 +196,13 @@ def render_model(model, env, time_sleep=0.01):
 
 if __name__ == '__main__':
     training_steps = 100
-    time_steps_per_training = 300
-    log_interall = 2
+    time_steps_per_training = 512
+    log_interall = 1
 
-    carla_training(training_steps, time_steps_per_training, log_interall)
-    # first_training(training_steps, time_steps_per_training)
+    # init_learnrate = 0.00001
+    # for i in range(10):
+    #     save_name = str(init_learnrate)+"_"+str(training_steps)
+    #     carla_training(training_steps, time_steps_per_training, log_interall, init_learnrate, save_name)
+    #     init_learnrate += init_learnrate
+
+    training_test(training_steps, time_steps_per_training, "Test", log_interall)
