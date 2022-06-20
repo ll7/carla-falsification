@@ -54,7 +54,7 @@ class CustomEnv(gym.Env):
                                             shape=(obs_size,), dtype=np.float32)
 
         self.done = False
-        self.reward = -100
+        self.reward = 0
         self.tick_count = 0
         self.max_tick_count = time_steps_per_training
         self.ticks_near_car = 0
@@ -126,13 +126,13 @@ class CustomEnv(gym.Env):
         self.max_walking_speed = 5   # 18/3,6 m/s
         self.pos_walker_default = [self.spawn_points[0].location.x, self.spawn_points[0].location.y]
         self.pos_walker = self.pos_walker_default
-        self.walker = self.__spawn_walker()
+        self.walker, self.collision_sensor_walker = self.__spawn_walker()
 
         # === car ===
         self.pos_car_default = [self.spawn_points[1].location.x, self.spawn_points[1].location.y]
         self.pos_car = self.pos_car_default
 
-        self.__spawn_car()
+        self.car, self.collision_sensor_car = self.__spawn_car()
         self.observation = self.get_obs()
 
         # === Draw Start/ End Point ===
@@ -144,7 +144,6 @@ class CustomEnv(gym.Env):
         self.collisionReward = 0
         self.info = {"actions": []}
 
-
         self._set_camara_view()
         self.world.tick()
 
@@ -152,19 +151,18 @@ class CustomEnv(gym.Env):
 
     def __spawn_walker(self):
         # === Load Blueprint and spawn walker ===
-        self.walker_bp = self.blueprint_library.filter('0012')[0]
-        self.walker_spawn_transform = self.spawn_points[0]
-        walker = self.world.spawn_actor(
-            self.walker_bp, self.walker_spawn_transform)
+        walker_bp = self.blueprint_library.filter('0012')[0]
+        walker_spawn_transform = self.spawn_points[0]
+        walker = self.world.spawn_actor(walker_bp, walker_spawn_transform)
         self.actor_list.append(walker)
         # self.walker.set_transform(self.spawn_points[0])
         try:
-            self.collision_sensor = self.world.spawn_actor(
+            collision_sensor_walker = self.world.spawn_actor(
                 self.blueprint_library.find('sensor.other.collision'),
                 carla.Transform(), attach_to=walker)
         except:
             print("collision sensor failed")
-        return walker
+        return walker, collision_sensor_walker
 
     def _set_camara_view(self):
         # === Walker View Camera ===
@@ -179,21 +177,21 @@ class CustomEnv(gym.Env):
     def __spawn_car(self):
         tm_port = self.set_tm_seed()
 
-        self.car_bp = self.blueprint_library.filter('vehicle.tesla.model3')[0]
-        self.car_sp = self.spawn_points[1]
-        self.car = self.world.spawn_actor(
-            self.car_bp, self.car_sp)
-        self.actor_list.append(self.car)
+        car_bp = self.blueprint_library.filter('vehicle.tesla.model3')[0]
+        car_sp = self.spawn_points[1]
+        car = self.world.spawn_actor(car_bp, car_sp)
+        self.actor_list.append(car)
 
-        self.car.set_autopilot(True, tm_port)
+        car.set_autopilot(True, tm_port)
 
         try:
-            self.collision_sensor = self.world.spawn_actor(
+            collision_sensor_car = self.world.spawn_actor(
                 self.blueprint_library.find('sensor.other.collision'),
-                carla.Transform(), attach_to=self.car)
-            self.collision_sensor.listen(lambda event: self.collision_handler(event))
+                carla.Transform(), attach_to=car)
+            collision_sensor_car.listen(lambda event: self.collision_handler(event))
         except:
-            print("collision sensor failed")
+            print("collision sensor failed car")
+        return car, collision_sensor_car
 
     def draw_waypoint(self, location, index, life_time=120.0):
 
@@ -203,11 +201,12 @@ class CustomEnv(gym.Env):
 
     def reward_calculation(self):
         # === Calculate Reward for RL-learning ===
-        reward_distance = -math.dist(self.pos_walker, self.pos_car)
-        # Reward for being near the car
-        # if reward_distance > -10:
-        #     reward_distance = reward_distance * 0.75
-        reward_distance = reward_distance
+        reward_distance = (-math.dist(self.pos_walker, self.pos_car))/1000
+
+        # End training if collision happend
+        if self.collisionReward > 0:
+            self.done = True
+
         return reward_distance + self.collisionReward
 
     def step(self, action):
@@ -259,7 +258,7 @@ class CustomEnv(gym.Env):
         actor_we_collide_against = event.other_actor
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
-        self.collisionReward = min(abs(intensity) + 0.1, 10)
+        self.collisionReward = min(abs(intensity)*100 + 0.1, 100)
         if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
             self.collisionReward = self.collisionReward + 1
             if intensity > 0:
@@ -268,10 +267,8 @@ class CustomEnv(gym.Env):
                 print("Hit with Pedestrian: ", self.collisionReward)
         else:
             print("Car Collition with whatever:", self.collisionReward)
-        self.done = True
 
     def reset(self):
-        #
         self.tick_count = 0
         self.reward = 0
         self.collisionReward = 0
@@ -300,15 +297,15 @@ class CustomEnv(gym.Env):
     def reset_walker(self):
         self.pos_car = self.pos_car_default
         self.pos_walker = self.pos_walker_default
-        self.collision_sensor.destroy()
+        self.collision_sensor_walker.destroy()
         self.walker.destroy()
-        self.walker = self.__spawn_walker()
+        self.walker, self.collision_sensor_walker = self.__spawn_walker()
     def reset_car(self):
         tm_port = self.set_tm_seed()
         self.car.set_autopilot(False, tm_port)
-        # self.collision_sensor.destroy()
+        self.collision_sensor_car.destroy()
         self.car.destroy()
-        self.__spawn_car()
+        self.car, self.collision_sensor_car = self.__spawn_car()
 
     def close(self):
         self.client = carla.Client(self.host, 2000)
