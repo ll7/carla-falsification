@@ -18,7 +18,7 @@ sys.path.append(".")
 
 def test_determinisWalker(ticks, save_path):
     env = CustomEnv(ticks)
-    model = PPO.load("../tmp/"+save_path, env=env)
+    model = PPO.load(save_path, env=env)
     obs = env.reset()
     actions = []
     positions = []
@@ -43,7 +43,7 @@ def test_determinisWalker(ticks, save_path):
 
 def test_Results(ticks, save_path):
     env = CustomEnv(ticks)
-    model = PPO.load("../tmp/" + save_path, env=env)
+    model = PPO.load(save_path, env=env)
     obs = env.reset()
     action1 = []
     auswertung = []
@@ -76,8 +76,44 @@ def test_Results(ticks, save_path):
     mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
     print(mean_reward, std_reward)
 
+def load_action(action_file):
+    import ast
+    file1 = open(action_file, 'r')
+    Lines = file1.readlines()
+    array = []
+    for line in Lines:
+        array.append(ast.literal_eval(line.strip()))
+    return array
+
+def test_actions(ticks, action_file):
+    actions = load_action(action_file)
+    print(actions)
+    env = CustomEnv(ticks)
+    obs = env.reset()
+    action1 = []
+    auswertung = []
+    rewards = 0
+    for i in range(10):
+        for i2 in range(env.max_tick_count):
+            action = actions[i2]
+            obs, reward, done, info = env.step(action)
+            rewards += reward
+            if done:
+                print(rewards)
+                auswertung.append(rewards)
+                rewards = 0
+                env.reset()
+                time.sleep(0.5)
+                break
+    # print(action1)
+    env.close()
+
+
 if __name__ == '__main__':
-    ticks = 300
-    save_name = "myModel.zip"
-    test_determinisWalker(ticks, save_name)
+    ticks = 512
+    folder = "../tmp/"
+    save_name = folder + "myModel4e-05_3000.zip"
+    action_file = folder + "Actions-8.925847"
+    # test_determinisWalker(ticks, save_name)
     # test_Results(ticks, save_name)
+    test_actions(ticks, action_file)
