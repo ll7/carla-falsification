@@ -20,6 +20,7 @@ def test_determinisWalker(ticks, save_path):
     env = CustomEnv(ticks)
     model = PPO.load(save_path, env=env)
     obs = env.reset()
+    env.render()
     actions = []
     positions = []
     for index in range(env.max_tick_count):
@@ -45,6 +46,7 @@ def test_Results(ticks, save_path):
     env = CustomEnv(ticks)
     model = PPO.load(save_path, env=env)
     obs = env.reset()
+    env.render()
     action1 = []
     auswertung = []
     rewards = 0
@@ -73,8 +75,8 @@ def test_Results(ticks, save_path):
     min_v = min(auswertung)
     print('max:', max_v, 'min:', min_v, 'mean', mean, 'max-min:',  max_v-min_v)
 
-    mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
-    print(mean_reward, std_reward)
+    # mean_reward, std_reward = evaluate_policy(model, model.get_env(), n_eval_episodes=10)
+    # print(mean_reward, std_reward)
 
 def load_action(action_file):
     import ast
@@ -90,6 +92,7 @@ def test_actions(ticks, action_file):
     print(actions)
     env = CustomEnv(ticks)
     obs = env.reset()
+    env.render()
     action1 = []
     auswertung = []
     rewards = 0
@@ -111,9 +114,10 @@ def test_actions(ticks, action_file):
 
 if __name__ == '__main__':
     ticks = 512
-    folder = "../tmp/"
-    save_name = folder + "myModel4e-05_3000.zip"
-    action_file = folder + "Actions-8.925847"
+    # folder = "../tmp/"
+    folder = "../tmp/GoodModels/"
+    save_name = folder + "myModel1e-05_3000.zip"
+    action_file = folder + "Actions-21.086712"
     # test_determinisWalker(ticks, save_name)
-    # test_Results(ticks, save_name)
-    test_actions(ticks, action_file)
+    test_Results(ticks, save_name)
+    # test_actions(ticks, action_file)
