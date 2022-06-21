@@ -163,7 +163,7 @@ def carla_training(training_steps, time_steps_per_training, log_interall, learni
     env.close()
 
 
-def training_test(training_steps, time_steps_per_training, save_name, log_interall):
+def training_test(training_steps, time_steps_per_training, save_name, log_interall, learn_rate=0.0003):
     env = CustomEnv(time_steps_per_training)
     tmp_path = "./tmp/Test_TB/" + str(save_name)
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
@@ -171,7 +171,7 @@ def training_test(training_steps, time_steps_per_training, save_name, log_intera
     # required before you can step the environment
     env.reset()
 
-    model = PPO('MlpPolicy', env, verbose=2)
+    model = PPO('MlpPolicy', env, verbose=2, learning_rate=learn_rate)
     model.set_logger(new_logger)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
                 log_interval=log_interall,
@@ -200,9 +200,11 @@ if __name__ == '__main__':
     log_interall = 1
 
     init_learnrate = 0.001
-    for i in range(5):
+    init_learnrates = [0.00003, 0.000165, 0.0003, 0.00165, 0.003]
+    for i in range(len(init_learnrates)):
         save_name = str(init_learnrate)+"_"+str(training_steps)
-        carla_training(training_steps, time_steps_per_training, log_interall, init_learnrate, save_name)
-        init_learnrate = init_learnrate * 2
+        # carla_training(training_steps, time_steps_per_training, log_interall, init_learnrate, save_name)
+        training_test(training_steps, time_steps_per_training, save_name, log_interall, init_learnrates[i])
+        # init_learnrate = init_learnrate * 2
 
-    training_test(training_steps, time_steps_per_training, "Test", log_interall)
+    # training_test(training_steps, time_steps_per_training, "Test", log_interall, init_learnrates[i])
