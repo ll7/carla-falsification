@@ -210,7 +210,7 @@ class CustomEnv(gym.Env):
         # === Render Mode ===
         if mode == "human":
             settings = self.world.get_settings()
-            settings.no_rendering_mode = True
+            settings.no_rendering_mode = False
             self.world.apply_settings(settings)
         else:
             settings = self.world.get_settings()
