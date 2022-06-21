@@ -93,6 +93,13 @@ class CustomEnv(gym.Env):
         # settings.max_substep_delta_time = 0.01
         # settings.max_substeps = 10
 
+        # === Render Mode ===
+        # settings = world.get_settings()
+        settings.no_rendering_mode = True
+        # world.apply_settings(settings)
+        # ...
+        # settings.no_rendering_mode = False
+
         self.world.apply_settings(settings)
 
         # Needed?
@@ -103,15 +110,6 @@ class CustomEnv(gym.Env):
         self.traffic_manager.set_synchronous_mode(True)
         self.traffic_manager.set_random_device_seed(0)  # define TM seed for determinism
 
-
-
-        # === Render Mode ===
-        # settings = world.get_settings()
-        # settings.no_rendering_mode = True
-        # world.apply_settings(settings)
-        # ...
-        # settings.no_rendering_mode = False
-        # world.apply_settings(settings)
 
         # === Spawn Points ===
         # 1. Spawn Point for Walker, 2. for Car
@@ -208,6 +206,16 @@ class CustomEnv(gym.Env):
             self.done = True
 
         return reward_distance + self.collisionReward
+    def render(self, mode="human"):
+        # === Render Mode ===
+        if mode == "human":
+            settings = self.world.get_settings()
+            settings.no_rendering_mode = True
+            self.world.apply_settings(settings)
+        else:
+            settings = self.world.get_settings()
+            settings.no_rendering_mode = True
+            self.world.apply_settings(settings)
 
     def step(self, action):
         # === Let the walker do a move ===

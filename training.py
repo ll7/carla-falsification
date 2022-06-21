@@ -195,14 +195,14 @@ def render_model(model, env, time_sleep=0.01):
 
 
 if __name__ == '__main__':
-    training_steps = 100
+    training_steps = 10000
     time_steps_per_training = 512
     log_interall = 1
 
-    # init_learnrate = 0.00001
-    # for i in range(10):
-    #     save_name = str(init_learnrate)+"_"+str(training_steps)
-    #     carla_training(training_steps, time_steps_per_training, log_interall, init_learnrate, save_name)
-    #     init_learnrate += init_learnrate
+    init_learnrate = 0.001
+    for i in range(5):
+        save_name = str(init_learnrate)+"_"+str(training_steps)
+        carla_training(training_steps, time_steps_per_training, log_interall, init_learnrate, save_name)
+        init_learnrate = init_learnrate * 2
 
     training_test(training_steps, time_steps_per_training, "Test", log_interall)
