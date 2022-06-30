@@ -107,7 +107,7 @@ class CustomEnv(gym.Env):
 
         # Set up the traffic manager
         self.traffic_manager = self.client.get_trafficmanager(8000)
-        self.traffic_manager.set_synchronous_mode(True)
+        # self.traffic_manager.set_synchronous_mode(True)
         self.traffic_manager.set_random_device_seed(0)  # define TM seed for determinism
 
 

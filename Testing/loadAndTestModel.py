@@ -117,7 +117,7 @@ if __name__ == '__main__':
     # folder = "../tmp/"
     folder = "../tmp/GoodModels/"
     save_name = folder + "myModel1e-05_3000.zip"
-    action_file = folder + "Actions-21.086712"
+    action_file = folder + "Actions-make-difference"
     # test_determinisWalker(ticks, save_name)
-    test_Results(ticks, save_name)
-    # test_actions(ticks, action_file)
+    # test_Results(ticks, save_name)
+    test_actions(ticks, action_file)
