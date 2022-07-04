@@ -318,9 +318,21 @@ class CustomEnv(gym.Env):
     def close(self):
         self.client = carla.Client(self.host, 2000)
         self.client.set_timeout(60.0)
+
+        # Destroy Car
+        self.car.set_autopilot(False)
+        self.collision_sensor_car.destroy()
+        self.car.destroy()
+
+        # Destroy Walker
+        self.collision_sensor_walker.destroy()
+        self.walker.destroy()
+
+        # Destroy all what isn't jet destroyed
         self.client.apply_batch([carla.command.DestroyActor(x)
                                  for x in self.actor_list])
 
         # tick for changes to take effect
+        self.world.tick()
         self.world.tick()
         self.world.tick()
