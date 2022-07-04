@@ -5,7 +5,7 @@ from time import sleep
 import tensorflow as tf
 import datetime
 from typing import Callable
-
+import optuna
 from stable_baselines3.common.logger import configure
 
 from my_rl import CustomEnv
@@ -158,26 +158,29 @@ def carla_training(training_steps, time_steps_per_training, log_interall, learni
                 callback=CustomCallback(time_steps_per_training),
                 tb_log_name='PPO_Log', log_interval=log_interall)
 
-    model.save("./tmp/myModel"+str(save_name))
+    model.save("./tmp/myModel" + str(save_name))
     print('Reward:', render_model(model, env))
     env.close()
 
 
 def training_test(training_steps, time_steps_per_training, save_name, log_interall, learn_rate=0.0003):
     env = CustomEnv(time_steps_per_training)
-    tmp_path = "./tmp/Test_TB/" + str(save_name)
+    tmp_path = "./tmp/optuna_tb/" + str(save_name)
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
     # required before you can step the environment
     env.reset()
 
+    cb = CustomCallback(time_steps_per_training)
     model = PPO('MlpPolicy', env, verbose=2, learning_rate=learn_rate)
     model.set_logger(new_logger)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
                 log_interval=log_interall,
-                callback=CustomCallback(time_steps_per_training))
-    model.save("./tmp/test_Model"+str(save_name))
+                callback=cb)
+    model.save("./tmp/test_Model" + str(save_name))
     env.close()
+
+    return cb.best_result
 
 
 def render_model(model, env, time_sleep=0.01):
@@ -194,17 +197,50 @@ def render_model(model, env, time_sleep=0.01):
     return rewards
 
 
+def optuna_trial(trial):
+    learnrate = trial.suggest_float('learnrate', 5e-6, 0.01)
+    # policy = None
+    # algorithm = None
+    # batch_size = trial.suggest_int('batch_size', 20, 3000)
+    # n_epochs = 300,
+    # gamma = trial.suggest_float('gamma', 0.7, 0.999)
+    # gae_lambda = trial.suggest_float('gae_lambda', 0.9, 1.0)
+    # clip_range = trial.suggest_discrete_uniform('clip_range', 0.1, 0.5, 0.1)
+    # clip_range_vf=None,
+    # normalize_advantage=True,
+    # ent_coef = trial.suggest_float('ent_coef', 0.0, 0.02)
+    # vf_coef = trial.suggest_float('vf_coef', 0.5, 1.0)
+    # max_grad_norm=0.5,
+    # use_sde=False,
+    # sde_sample_freq=- 1,
+    # target_kl=None,
+
+
+    scores = []
+
+    ### Mean of 3 runs because huge variaty of results
+    for i in range(3):
+        save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
+        scores.append(training_test(training_steps, time_steps_per_training, save_name, log_interall, learnrate))
+
+    return sum(scores) / len(scores)
+
+def opt_training():
+    study = optuna.create_study(direction='maximize')
+    study.optimize(optuna_trial, n_trials=50)
+
+def manual_training():
+
+    init_learnrates = [0.00015, 0.0003, 0.0006]
+    for i in range(len(init_learnrates)):
+        save_name = str(init_learnrates[i])+"_"+str(training_steps)
+        training_test(training_steps, time_steps_per_training, save_name, log_interall, init_learnrates[i])
+
+
 if __name__ == '__main__':
-    training_steps = 10000
+    training_steps = 1500
     time_steps_per_training = 512
     log_interall = 1
+    opt_training()
+    # manual_training()
 
-    init_learnrate = 0.001
-    init_learnrates = [0.00003, 0.000165, 0.0003, 0.00165, 0.003]
-    for i in range(len(init_learnrates)):
-        save_name = str(init_learnrate)+"_"+str(training_steps)
-        # carla_training(training_steps, time_steps_per_training, log_interall, init_learnrate, save_name)
-        training_test(training_steps, time_steps_per_training, save_name, log_interall, init_learnrates[i])
-        # init_learnrate = init_learnrate * 2
-
-    # training_test(training_steps, time_steps_per_training, "Test", log_interall, init_learnrates[i])
