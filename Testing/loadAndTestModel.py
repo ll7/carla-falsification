@@ -96,11 +96,16 @@ def test_actions(ticks, action_file):
     action1 = []
     auswertung = []
     rewards = 0
+
+    while len(actions) < ticks:
+        actions.append(actions[-1])
+
     for i in range(10):
         for i2 in range(env.max_tick_count):
             action = actions[i2]
             obs, reward, done, info = env.step(action)
             rewards += reward
+            # time.sleep(0.01)
             if done:
                 print(rewards)
                 auswertung.append(rewards)
@@ -117,7 +122,7 @@ if __name__ == '__main__':
     # folder = "../tmp/"
     folder = "../tmp/GoodModels/"
     save_name = folder + "myModel1e-05_3000.zip"
-    action_file = folder + "Actions-make-difference"
+    action_file = folder + "Actions-3.73375"
     # test_determinisWalker(ticks, save_name)
     # test_Results(ticks, save_name)
     test_actions(ticks, action_file)
