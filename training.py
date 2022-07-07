@@ -173,6 +173,7 @@ def training_test(training_steps, time_steps_per_training, save_name, log_intera
 
     cb = CustomCallback(time_steps_per_training)
     model = PPO('MlpPolicy', env, verbose=2, learning_rate=learn_rate)
+    print(model.policy)
     model.set_logger(new_logger)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
                 log_interval=log_interall,

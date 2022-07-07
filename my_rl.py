@@ -169,7 +169,7 @@ class CustomEnv(gym.Env):
         location = self.spawn_points[0].location
         # location = carla.Location(x=143.119980, y=326.970001, z=0.300000)
         transform = carla.Transform(location, self.spawn_points[0].rotation)
-        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=150),
+        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=90),
                                                 carla.Rotation(pitch=-90)))
 
     def __spawn_car(self):
@@ -211,6 +211,7 @@ class CustomEnv(gym.Env):
         if mode == "human":
             settings = self.world.get_settings()
             settings.no_rendering_mode = False
+            self.traffic_manager.set_synchronous_mode(False)
             self.world.apply_settings(settings)
         elif mode == "humanSync":
             settings = self.world.get_settings()

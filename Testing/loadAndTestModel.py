@@ -129,5 +129,5 @@ if __name__ == '__main__':
     # test_determinisWalker(ticks, save_name)
     # test_Results(ticks, save_name)
 
-    test_actions(ticks, action_file, "humanSync")
+    #test_actions(ticks, action_file, "humanSync")
     test_actions(ticks, action_file, "human")
