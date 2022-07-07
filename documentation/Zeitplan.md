@@ -30,31 +30,34 @@
 - Obs Space erweitern 
 - (Action Space)
 
-<hr>
 
 ### KW 24
 - Initialisisung high low/ Eigenschaften Box Bounds 
-- Action Sequenz speichern 
-<br>
-
-- Eigentschaften Model betrachten 
-- (Ergebnisse Determinismus zusammenschreiben/ Issue Github)
+- Action Sequenz speichern
 - Dokumentation 
 
 
-### KW 25+
-- Optuna versuchen und effizienter zu werden
+### KW 25-27
+- Optuna versuchen und effizienter zu werden 
+- Add Render Mode(s)  
 - Learning Rate/ Parameter anpassen 
-- Welche Epochen anzahl ist sinnvoll? 
-- Trainingsverfahren
-- Andere Policy 
+- Welche Epochen anzahl ist sinnvoll?
 - Add Force/ set_target_velocity
-- Weitere Scenarien hinzufuegen 
 - Async Mode testen
-- https://medium.com/aureliantactics/ppo-hyperparameters-and-ranges-6fc2d29bccbe
+- Ergebnisse Determinismus zusammenschreiben
+- Eigentschaften Model betrachten
+- 
+<hr>
 
+### KW 28
+- Optuna mit mehr parametern
+- Zurück zum Eigentlichen Problem ... -> Klassifizierung finden und situation bewerten
+- Größeres Model?! 
+- Trainingsverfahren testen (PPO, A2C, DDPG, SAC, TD3)
+- Issue Github Determinism
+- Weitere Scenarien hinzufuegen (Interface zum schnellen Einfügen)
+- Force vector in Abhänigkeit wie das Fahrzeug steht + überlegung wie schnell soll fahrzeug sein
 
 ### ToDo 
-- Abschlusspraesentation erstellen
+- Abschlusspräsentation erstellen
 - Doku
-- Abschlusspraesentation
