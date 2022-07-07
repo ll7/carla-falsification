@@ -169,7 +169,7 @@ class CustomEnv(gym.Env):
         location = self.spawn_points[0].location
         # location = carla.Location(x=143.119980, y=326.970001, z=0.300000)
         transform = carla.Transform(location, self.spawn_points[0].rotation)
-        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=80),
+        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=150),
                                                 carla.Rotation(pitch=-90)))
 
     def __spawn_car(self):
@@ -179,16 +179,16 @@ class CustomEnv(gym.Env):
         car_sp = self.spawn_points[1]
         car = self.world.spawn_actor(car_bp, car_sp)
         self.actor_list.append(car)
+        velocity = carla.Vector3D(x=50, y=0, z=0)
+        car.set_target_velocity(velocity)
+
 
         car.set_autopilot(True, tm_port)
 
-        try:
-            collision_sensor_car = self.world.spawn_actor(
-                self.blueprint_library.find('sensor.other.collision'),
-                carla.Transform(), attach_to=car)
-            collision_sensor_car.listen(lambda event: self.collision_handler(event))
-        except:
-            print("collision sensor failed car")
+        collision_sensor_car = self.world.spawn_actor(
+            self.blueprint_library.find('sensor.other.collision'),
+            carla.Transform(), attach_to=car)
+        collision_sensor_car.listen(lambda event: self.collision_handler(event))
         return car, collision_sensor_car
 
     def draw_waypoint(self, location, index, life_time=120.0):
@@ -212,6 +212,12 @@ class CustomEnv(gym.Env):
             settings = self.world.get_settings()
             settings.no_rendering_mode = False
             self.world.apply_settings(settings)
+        elif mode == "humanSync":
+            settings = self.world.get_settings()
+            settings.no_rendering_mode = False
+            self.traffic_manager.set_synchronous_mode(True)
+            self.world.apply_settings(settings)
+
         else:
             settings = self.world.get_settings()
             settings.no_rendering_mode = True
@@ -266,7 +272,9 @@ class CustomEnv(gym.Env):
         actor_we_collide_against = event.other_actor
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
-        self.collisionReward = min(abs(intensity)*100 + 0.1, 100)
+        # To ensure that the initial force does not count as collision
+        if self.tick_count > 100:
+            self.collisionReward = min(abs(intensity)*100 + 0.1, 100)
         if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
             self.collisionReward = self.collisionReward + 1
             if intensity > 0:
