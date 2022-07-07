@@ -87,12 +87,13 @@ def load_action(action_file):
         array.append(ast.literal_eval(line.strip()))
     return array
 
-def test_actions(ticks, action_file):
+
+def test_actions(ticks, action_file, mode="human"):
     actions = load_action(action_file)
     print(actions)
     env = CustomEnv(ticks)
     obs = env.reset()
-    env.render()
+    env.render(mode=mode)
     action1 = []
     auswertung = []
     rewards = 0
@@ -118,6 +119,8 @@ def test_actions(ticks, action_file):
 
 
 if __name__ == '__main__':
+    # Modes: humanSync, human
+
     ticks = 512
     # folder = "../tmp/"
     folder = "../tmp/GoodModels/"
@@ -125,4 +128,6 @@ if __name__ == '__main__':
     action_file = folder + "Actions-3.73375"
     # test_determinisWalker(ticks, save_name)
     # test_Results(ticks, save_name)
-    test_actions(ticks, action_file)
+
+    test_actions(ticks, action_file, "humanSync")
+    test_actions(ticks, action_file, "human")
