@@ -165,7 +165,7 @@ def carla_training(training_steps, time_steps_per_training, log_interall, learni
 
 def training_test(training_steps, time_steps_per_training, save_name, log_interall, learn_rate=0.0003):
     env = CustomEnv(time_steps_per_training)
-    tmp_path = "./tmp/optuna_tb/" + str(save_name)
+    tmp_path = "./tmp/optuna_tb/" + str(training_steps) + "/" + str(save_name)
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
     # required before you can step the environment
@@ -225,9 +225,9 @@ def optuna_trial(trial):
 
     return sum(scores) / len(scores)
 
-def opt_training():
+def opt_training(n_trials):
     study = optuna.create_study(direction='maximize')
-    study.optimize(optuna_trial, n_trials=50)
+    study.optimize(optuna_trial, n_trials=n_trials)
 
 def manual_training():
 
@@ -238,9 +238,9 @@ def manual_training():
 
 
 if __name__ == '__main__':
-    training_steps = 1500
+    training_steps = 300
     time_steps_per_training = 512
     log_interall = 1
-    opt_training()
+    opt_training(n_trials=50)
     # manual_training()
 
