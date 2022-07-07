@@ -23,13 +23,17 @@ First install Cuda then driver
 https://carla.readthedocs.io/en/latest/start_quickstart/
 
 pip3 install --upgrade pip
+
 pip3 install --user pygame numpy
 
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 1AF1527DE64CB8D9
+
 sudo add-apt-repository "deb [arch=amd64] http://dist.carla.org/carla $(lsb_release -sc) main"
 
 sudo apt-get update # Update the Debian package index
+
 sudo apt-get install carla-simulator=0.9.13 # Install Carla 0.9.13
+
 cd /opt/carla-simulator # Open the folder where CARLA is installed
 
 apt-get install libomp5
@@ -43,7 +47,23 @@ pip3 install --pre torch torchvision torchaudio --extra-index-url https://downlo
 
 pip3 install stable_baselines3
 
+### Extra for visulalisation and param optisation
+
+pip3 install optuna 
+
+pip3 install tensorboard
+
+
+#### Used Verions: 
+- pygame                            2.1.2
+- numpy                             1.22.2
+- carla                             0.9.13
+- gym                               0.21.0
+- tensorflow                        2.9.1
+- tensorboard                       2.9.1
+- stable-baselines3                 1.5.0
+- optuna                            2.10.1
+
 ## Start Training: 
 python3 training.py
-
 
