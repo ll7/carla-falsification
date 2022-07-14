@@ -4,7 +4,7 @@ import gym
 from time import sleep
 import tensorflow as tf
 import datetime
-from typing import Callable
+from typing import Callable, Optional, Dict, List, Tuple, Type, Union
 import optuna
 from stable_baselines3.common.logger import configure
 
@@ -13,8 +13,79 @@ import os
 import numpy as np
 from stable_baselines3 import DQN, A2C, PPO
 from stable_baselines3.common.callbacks import BaseCallback
+from stable_baselines3.common.policies import ActorCriticPolicy
+from torch import nn
+import torch as th
 
 sys.path.append(".")
+
+class CustomNetwork(nn.Module):
+    """
+    Custom network for policy and value function.
+    It receives as input the features extracted by the feature extractor.
+
+    :param feature_dim: dimension of the features extracted with the features_extractor (e.g. features from a CNN)
+    :param last_layer_dim_pi: (int) number of units for the last layer of the policy network
+    :param last_layer_dim_vf: (int) number of units for the last layer of the value network
+    """
+
+    def __init__(
+        self,
+        feature_dim: int,
+        last_layer_dim_pi: int = 64,
+        last_layer_dim_vf: int = 64,
+    ):
+        super(CustomNetwork, self).__init__()
+
+        # IMPORTANT:
+        # Save output dimensions, used to create the distributions
+        self.latent_dim_pi = last_layer_dim_pi
+        self.latent_dim_vf = last_layer_dim_vf
+
+        # Policy network
+        self.policy_net = nn.Sequential(
+            nn.Linear(feature_dim, last_layer_dim_pi), nn.ReLU()
+        )
+        # Value network
+        self.value_net = nn.Sequential(
+            nn.Linear(feature_dim, last_layer_dim_vf), nn.ReLU()
+        )
+
+    def forward(self, features: th.Tensor) -> Tuple[th.Tensor, th.Tensor]:
+        """
+        :return: (th.Tensor, th.Tensor) latent_policy, latent_value of the specified network.
+            If all layers are shared, then ``latent_policy == latent_value``
+        """
+        return self.policy_net(features), self.value_net(features)
+
+
+class CustomActorCriticPolicy(ActorCriticPolicy):
+    def __init__(
+        self,
+        observation_space: gym.spaces.Space,
+        action_space: gym.spaces.Space,
+        lr_schedule: Callable[[float], float],
+        net_arch: Optional[List[Union[int, Dict[str, List[int]]]]] = None,
+        activation_fn: Type[nn.Module] = nn.Tanh,
+        *args,
+        **kwargs,
+    ):
+
+        super(CustomActorCriticPolicy, self).__init__(
+            observation_space,
+            action_space,
+            lr_schedule,
+            net_arch,
+            activation_fn,
+            # Pass remaining arguments to base class
+            *args,
+            **kwargs,
+        )
+        # Disable orthogonal initialization
+        self.ortho_init = False
+
+    def _build_mlp_extractor(self) -> None:
+        self.mlp_extractor = CustomNetwork(self.features_dim)
 
 
 class CustomCallback(BaseCallback):
@@ -172,7 +243,14 @@ def training_test(training_steps, time_steps_per_training, save_name, log_intera
     env.reset()
 
     cb = CustomCallback(time_steps_per_training)
-    model = PPO('MlpPolicy', env, verbose=2, learning_rate=learn_rate)
+    from stable_baselines3.common.policies import ActorCriticPolicy
+    # def lr(x=0):
+    #     return learn_rate
+    # policy = ActorCriticPolicy(observation_space=env.observation_space, action_space=env.action_space, lr_schedule=lr)
+    policy_kwargs = dict(activation_fn=th.nn.ReLU,
+                         net_arch=[dict(pi=[512, 256, 128], vf=[512, 256, 128])])
+    # policy_kwargs = None
+    model = PPO("MlpPolicy", env, verbose=2, learning_rate=learn_rate, policy_kwargs=policy_kwargs)
     print(model.policy)
     model.set_logger(new_logger)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
@@ -182,7 +260,6 @@ def training_test(training_steps, time_steps_per_training, save_name, log_intera
     env.close()
 
     return cb.best_result
-
 
 def render_model(model, env, time_sleep=0.01):
     obs = env.reset()
@@ -220,7 +297,7 @@ def optuna_trial(trial):
     scores = []
 
     ### Mean of 3 runs because huge variaty of results
-    for i in range(3):
+    for i in range(2):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
         scores.append(training_test(training_steps, time_steps_per_training, save_name, log_interall, learnrate))
 
@@ -233,15 +310,16 @@ def opt_training(n_trials):
 def manual_training():
 
     init_learnrates = [0.00015, 0.0003, 0.0006]
-    for i in range(len(init_learnrates)):
-        save_name = str(init_learnrates[i])+"_"+str(training_steps)
-        training_test(training_steps, time_steps_per_training, save_name, log_interall, init_learnrates[i])
+    for i2 in range(2):
+        for i in range(len(init_learnrates)):
+            save_name = str(init_learnrates[i])+"_"+str(training_steps)+"_"+str(i2)
+            training_test(training_steps, time_steps_per_training, save_name, log_interall, init_learnrates[i])
 
 
 if __name__ == '__main__':
-    training_steps = 300
+    training_steps = 100
     time_steps_per_training = 512
     log_interall = 1
-    opt_training(n_trials=50)
-    # manual_training()
+    # opt_training(n_trials=50)
+    manual_training()
 
