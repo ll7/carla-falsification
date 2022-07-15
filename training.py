@@ -234,9 +234,10 @@ def carla_training(training_steps, time_steps_per_training, log_interall, learni
     env.close()
 
 
-def training_test(training_steps, time_steps_per_training, save_name, log_interall, learn_rate=0.0003):
+def training_test(training_steps, time_steps_per_training,
+                  save_name, log_interall, learn_rate=0.0003, policy_kwargs=None):
     env = CustomEnv(time_steps_per_training)
-    tmp_path = "./tmp/optuna_tb/" + str(training_steps) + "/" + str(save_name)
+    tmp_path = "./tmp/optuna_tb_big_net/" + str(training_steps) + "/" + str(save_name)
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
     # required before you can step the environment
@@ -247,11 +248,12 @@ def training_test(training_steps, time_steps_per_training, save_name, log_intera
     # def lr(x=0):
     #     return learn_rate
     # policy = ActorCriticPolicy(observation_space=env.observation_space, action_space=env.action_space, lr_schedule=lr)
-    policy_kwargs = dict(activation_fn=th.nn.ReLU,
-                         net_arch=[dict(pi=[512, 256, 128], vf=[512, 256, 128])])
+    if policy_kwargs is None:
+        policy_kwargs = dict(activation_fn=th.nn.ReLU,
+                             net_arch=[dict(pi=[512, 256, 128], vf=[512, 256, 128])])
     # policy_kwargs = None
     model = PPO("MlpPolicy", env, verbose=2, learning_rate=learn_rate, policy_kwargs=policy_kwargs)
-    print(model.policy)
+    # print(model.policy)
     model.set_logger(new_logger)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
                 log_interval=log_interall,
@@ -275,7 +277,44 @@ def render_model(model, env, time_sleep=0.01):
     return rewards
 
 
+def create_policy_kwargs(layer, layersize, activation_fn):
+    if activation_fn == "Linear":
+        activation_fn = th.nn.Linear
+    elif activation_fn == "ReLU":
+        activation_fn = th.nn.ReLU
+    elif activation_fn == "Sigmoid":
+        activation_fn = th.nn.Sigmoid
+    elif activation_fn == "Tanh":
+        activation_fn = th.nn.Tanh
+    else:
+        activation_fn = th.nn.Tanh
+
+    pi2 = []
+    vf = []
+    for i in range(layer):
+        pi2.append(layersize[i])
+        vf.append(layersize[i])
+
+    # pi2 = [512, 256, 128]
+    # vf = [512, 256, 128]
+    policy_kwargs = dict(activation_fn=activation_fn,
+                             net_arch=[dict(pi=pi2, vf=vf)])
+    # print("policy_kwargs:", policy_kwargs)
+    return policy_kwargs
+
+
 def optuna_trial(trial):
+    first_layer = trial.suggest_categorical('first_layer', [64, 128, 256, 512, 1024, 2048])
+    secound_layer = trial.suggest_categorical('secound_layer', [64, 128, 256, 512, 1024, 2048])
+    third_layer = trial.suggest_categorical('third_layer', [64, 128, 256, 512, 1024, 2048])
+    fourth_layer = trial.suggest_categorical('fourth_layer', [64, 128, 256, 512, 1024, 2048])
+    layers = trial.suggest_categorical('layers', [2, 3, 4])
+    activation_function = trial.suggest_categorical('activation_function', ["ReLU", "Sigmoid", "Tanh"])
+    policy_kwargs = create_policy_kwargs(
+        layers,
+        (first_layer, secound_layer, third_layer, fourth_layer),
+        activation_function
+    )
     learnrate = trial.suggest_float('learnrate', 5e-6, 0.01)
     # policy = None
     # algorithm = None
@@ -296,12 +335,13 @@ def optuna_trial(trial):
 
     scores = []
 
-    ### Mean of 3 runs because huge variaty of results
-    for i in range(2):
+    ### Mean of more runs because huge variaty of results but what we really want is a high reward...
+    for i in range(5):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
-        scores.append(training_test(training_steps, time_steps_per_training, save_name, log_interall, learnrate))
-
-    return sum(scores) / len(scores)
+        scores.append(training_test(training_steps, time_steps_per_training, save_name,
+                                    log_interall, learnrate, policy_kwargs))
+    # Mean + Max / 2
+    return (sum(scores) / len(scores) + max(scores))/2
 
 def opt_training(n_trials):
     study = optuna.create_study(direction='maximize')
@@ -317,9 +357,9 @@ def manual_training():
 
 
 if __name__ == '__main__':
-    training_steps = 100
+    training_steps = 500
     time_steps_per_training = 512
     log_interall = 1
-    # opt_training(n_trials=50)
-    manual_training()
+    opt_training(n_trials=50)
+    # manual_training()
 
