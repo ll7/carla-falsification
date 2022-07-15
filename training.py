@@ -259,7 +259,7 @@ def training_test(training_steps, time_steps_per_training,
                 log_interval=log_interall,
                 callback=cb)
     model.save("./tmp/test_Model" + str(save_name))
-    env.close()
+    # env.close()
 
     return cb.best_result
 
@@ -299,7 +299,7 @@ def create_policy_kwargs(layer, layersize, activation_fn):
     # vf = [512, 256, 128]
     policy_kwargs = dict(activation_fn=activation_fn,
                              net_arch=[dict(pi=pi2, vf=vf)])
-    # print("policy_kwargs:", policy_kwargs)
+    print("policy_kwargs:", policy_kwargs, "activation_fn:", activation_fn)
     return policy_kwargs
 
 
@@ -323,20 +323,16 @@ def optuna_trial(trial):
     # gamma = trial.suggest_float('gamma', 0.7, 0.999)
     # gae_lambda = trial.suggest_float('gae_lambda', 0.9, 1.0)
     # clip_range = trial.suggest_discrete_uniform('clip_range', 0.1, 0.5, 0.1)
-    # clip_range_vf=None,
-    # normalize_advantage=True,
     # ent_coef = trial.suggest_float('ent_coef', 0.0, 0.02)
     # vf_coef = trial.suggest_float('vf_coef', 0.5, 1.0)
-    # max_grad_norm=0.5,
-    # use_sde=False,
-    # sde_sample_freq=- 1,
-    # target_kl=None,
+
 
     try:
         return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
     except:
+        print("Expect Case")
         # Retry with new env
-        time.sleep(180)
+        time.sleep(120)
         global env
         env = CustomEnv(time_steps_per_training)
         return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
@@ -370,8 +366,10 @@ if __name__ == '__main__':
     time_steps_per_training = 512
     log_interall = 1
 
+    n_trials = 50
     global env
     env = CustomEnv(time_steps_per_training)
+    env.render("human")
 
     opt_training(n_trials=50)
     # manual_training()
