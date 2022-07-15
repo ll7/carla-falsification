@@ -276,6 +276,8 @@ class CustomEnv(gym.Env):
         # To ensure that the initial force does not count as collision
         if self.tick_count > 100:
             self.collisionReward = min(abs(intensity)*100 + 0.1, 100)
+        else:
+            self.collisionReward = 0
         if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
             self.collisionReward = self.collisionReward + 1
             if intensity > 0:
