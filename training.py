@@ -138,7 +138,7 @@ class CustomCallback(BaseCallback):
 
             try:
                 log_reward = self.locals['infos'][0]['episode']['r']
-                self.logger.record('Log_Reward', log_reward)
+                # self.logger.record('Log_Reward', log_reward)
                 try:
                     if log_reward > self.best_result:
                         print(self.n_calls / self.log_interval, ':', log_reward)
@@ -236,7 +236,7 @@ def carla_training(training_steps, time_steps_per_training, log_interall, learni
 
 def training_test(training_steps, time_steps_per_training,
                   save_name, log_interall, learn_rate=0.0003, policy_kwargs=None):
-    env = CustomEnv(time_steps_per_training)
+    # env = CustomEnv(time_steps_per_training)
     tmp_path = "./tmp/optuna_tb_big_net/" + str(training_steps) + "/" + str(save_name)
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
@@ -250,7 +250,7 @@ def training_test(training_steps, time_steps_per_training,
     # policy = ActorCriticPolicy(observation_space=env.observation_space, action_space=env.action_space, lr_schedule=lr)
     if policy_kwargs is None:
         policy_kwargs = dict(activation_fn=th.nn.ReLU,
-                             net_arch=[dict(pi=[512, 256, 128], vf=[512, 256, 128])])
+                             net_arch=[dict(pi=[64, 64, 2048], vf=[64, 64, 2048])])
     # policy_kwargs = None
     model = PPO("MlpPolicy", env, verbose=2, learning_rate=learn_rate, policy_kwargs=policy_kwargs)
     # print(model.policy)
@@ -332,9 +332,17 @@ def optuna_trial(trial):
     # sde_sample_freq=- 1,
     # target_kl=None,
 
+    try:
+        return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
+    except:
+        # Retry with new env
+        time.sleep(180)
+        global env
+        env = CustomEnv(time_steps_per_training)
+        return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
 
+def validate_trys(learnrate, policy_kwargs):
     scores = []
-
     ### Mean of more runs because huge variaty of results but what we really want is a high reward...
     for i in range(5):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
@@ -342,6 +350,7 @@ def optuna_trial(trial):
                                     log_interall, learnrate, policy_kwargs))
     # Mean + Max / 2
     return (sum(scores) / len(scores) + max(scores))/2
+
 
 def opt_training(n_trials):
     study = optuna.create_study(direction='maximize')
@@ -360,6 +369,10 @@ if __name__ == '__main__':
     training_steps = 500
     time_steps_per_training = 512
     log_interall = 1
+
+    global env
+    env = CustomEnv(time_steps_per_training)
+
     opt_training(n_trials=50)
     # manual_training()
 
