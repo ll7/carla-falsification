@@ -319,22 +319,13 @@ class CustomEnv(gym.Env):
     def reset_walker(self):
         self.pos_car = self.pos_car_default
         self.pos_walker = self.pos_walker_default
-        try:
-            self.collision_sensor_walker.destroy()
-        except:
-            print("collision_sensor_walker.destroy() failed")
-        try:
-            self.walker.destroy()
-        except:
-            print("walker.destroy() failed")
+        self.collision_sensor_walker.destroy()
+        self.walker.destroy()
         self.walker, self.collision_sensor_walker = self.__spawn_walker()
     def reset_car(self):
         tm_port = self.set_tm_seed()
         self.car.set_autopilot(False, tm_port)
-        try:
-            self.collision_sensor_car.destroy()
-        except:
-            print("self.collision_sensor_car.destroy() failed")
+        self.collision_sensor_car.destroy()
         self.car.destroy()
         self.car, self.collision_sensor_car = self.__spawn_car()
 

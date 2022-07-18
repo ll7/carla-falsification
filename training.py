@@ -19,6 +19,8 @@ import torch as th
 
 sys.path.append(".")
 
+env = None
+
 class CustomNetwork(nn.Module):
     """
     Custom network for policy and value function.
@@ -191,49 +193,6 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
 
     return func
 
-
-def carla_training(training_steps, time_steps_per_training, log_interall, learning_rate, save_name):
-    env = CustomEnv(time_steps_per_training)
-
-    tmp_path = "./tmp/CartPole_DQN/" + str(save_name)
-    new_logger = configure(tmp_path, ["tensorboard", "stdout"])
-
-    model = PPO('MlpPolicy', env,
-                learning_rate=learning_rate,
-                # n_steps=time_steps_per_training,
-                # batch_size=time_steps_per_training,
-                # n_epochs=300,
-                # gamma=0.99,
-                # gae_lambda=0.95,
-                # clip_range=0.2,
-                # clip_range_vf=None,
-                # normalize_advantage=True,
-                # ent_coef=0.0,
-                # vf_coef=0.5,
-                # max_grad_norm=0.5,
-                # use_sde=False,
-                # sde_sample_freq=- 1,
-                # target_kl=None,
-                tensorboard_log="./ppo_tensorlog/1/",
-                # create_eval_env=False,
-                # policy_kwargs=None,
-                verbose=1,
-                # seed=123,
-                # device='auto',
-                # _init_setup_model=True
-                )
-
-    model.set_logger(new_logger)
-    obs = env.reset()
-    model.learn(total_timesteps=int(time_steps_per_training * training_steps),
-                callback=CustomCallback(time_steps_per_training),
-                tb_log_name='PPO_Log', log_interval=log_interall)
-
-    model.save("./tmp/myModel" + str(save_name))
-    print('Reward:', render_model(model, env))
-    env.close()
-
-
 def training_test(training_steps, time_steps_per_training,
                   save_name, log_interall, learn_rate=0.0003, policy_kwargs=None):
     # env = CustomEnv(time_steps_per_training)
@@ -259,7 +218,7 @@ def training_test(training_steps, time_steps_per_training,
                 log_interval=log_interall,
                 callback=cb)
     model.save("./tmp/test_Model" + str(save_name))
-    env.close()
+    # env.close()
 
     return cb.best_result
 
@@ -335,16 +294,17 @@ def optuna_trial(trial):
     try:
         return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
     except:
+        print("fail optuna")
         # Retry with new env
-        time.sleep(180)
-        global env
-        env = CustomEnv(time_steps_per_training)
-        return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
+        # time.sleep(180)
+        # global env
+        # env = CustomEnv(time_steps_per_training)
+        # return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
 
 def validate_trys(learnrate, policy_kwargs):
     scores = []
     ### Mean of more runs because huge variaty of results but what we really want is a high reward...
-    for i in range(5):
+    for i in range(3):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
         scores.append(training_test(training_steps, time_steps_per_training, save_name,
                                     log_interall, learnrate, policy_kwargs))
@@ -370,9 +330,8 @@ if __name__ == '__main__':
     time_steps_per_training = 512
     log_interall = 1
 
-    global env
     env = CustomEnv(time_steps_per_training)
-
+    env.render("human")
     opt_training(n_trials=50)
     # manual_training()
 
