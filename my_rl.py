@@ -64,7 +64,7 @@ class CustomEnv(gym.Env):
         self.town = 'Town01'
 
         self.client = carla.Client(self.host, 2000)
-        self.client.set_timeout(60.0)
+        self.client.set_timeout(20.0)
         self.world = self.client.get_world()
         self.blueprint_library = self.world.get_blueprint_library()
         self.actor_list = []
@@ -294,7 +294,10 @@ class CustomEnv(gym.Env):
         self.ticks_near_car = 0
         self.done = False
         self.info = {"actions":[]}
-        self.reset_walker()
+        try:
+            self.reset_walker()
+        except:
+            print("self.reset_walker() failed")
         try:
             self.reset_car()
         except:
@@ -316,13 +319,22 @@ class CustomEnv(gym.Env):
     def reset_walker(self):
         self.pos_car = self.pos_car_default
         self.pos_walker = self.pos_walker_default
-        self.collision_sensor_walker.destroy()
-        self.walker.destroy()
+        try:
+            self.collision_sensor_walker.destroy()
+        except:
+            print("collision_sensor_walker.destroy() failed")
+        try:
+            self.walker.destroy()
+        except:
+            print("walker.destroy() failed")
         self.walker, self.collision_sensor_walker = self.__spawn_walker()
     def reset_car(self):
         tm_port = self.set_tm_seed()
         self.car.set_autopilot(False, tm_port)
-        self.collision_sensor_car.destroy()
+        try:
+            self.collision_sensor_car.destroy()
+        except:
+            print("self.collision_sensor_car.destroy() failed")
         self.car.destroy()
         self.car, self.collision_sensor_car = self.__spawn_car()
 
