@@ -326,12 +326,12 @@ def manual_training():
 
 
 if __name__ == '__main__':
-    training_steps = 500
+    training_steps = 1000
     time_steps_per_training = 512
     log_interall = 1
 
     env = CustomEnv(time_steps_per_training)
-    env.render("human")
+    # env.render("human")
     opt_training(n_trials=50)
     # manual_training()
 
