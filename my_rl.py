@@ -58,7 +58,7 @@ class CustomEnv(gym.Env):
         self.tick_count = 0
         self.max_tick_count = time_steps_per_training
         self.ticks_near_car = 0
-
+        self.old_vel = 10
         # === Carla ===
         self.host = 'localhost'
         self.town = 'Town01'
@@ -169,7 +169,7 @@ class CustomEnv(gym.Env):
         location = self.spawn_points[0].location
         # location = carla.Location(x=143.119980, y=326.970001, z=0.300000)
         transform = carla.Transform(location, self.spawn_points[0].rotation)
-        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=90),
+        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=70),
                                                 carla.Rotation(pitch=-90)))
 
     def __spawn_car(self):
@@ -179,7 +179,8 @@ class CustomEnv(gym.Env):
         car_sp = self.spawn_points[1]
         car = self.world.spawn_actor(car_bp, car_sp)
         self.actor_list.append(car)
-        velocity = carla.Vector3D(x=50, y=0, z=0)
+        # Force to start with 8m/s
+        velocity = carla.Vector3D(x=8, y=0, z=0)
         car.set_target_velocity(velocity)
 
 
@@ -197,15 +198,33 @@ class CustomEnv(gym.Env):
                                      color=carla.Color(r=255, g=0, b=0), life_time=life_time,
                                      persistent_lines=True)
 
+    def drive_fast_near_walker(self):
+        v_car = self.car.get_velocity()
+        v_ms = math.sqrt(v_car.x * v_car.x + v_car.y * v_car.y + v_car.z * v_car.z)
+        if v_ms > 8 and math.dist(self.pos_walker, self.pos_car) < 10:
+            print("drive_fast_near_walker")
+            return 0.2
+        return 0
+
+    def check_emergency_braking(self):
+        v_car = self.car.get_velocity()
+        v_ms = math.sqrt(v_car.x * v_car.x + v_car.y * v_car.y + v_car.z * v_car.z)
+        # Set old vel every secound
+        if not self.tick_count % 20:
+            self.old_vel = v_ms
+        # TODO better formular then 80% loss of vel in 1 sec
+        if self.old_vel > 8 and self.old_vel*0.2 > v_ms:
+            print("emergency_braking")
+            return 0.1
+        return 0
+
     def reward_calculation(self):
         # === Calculate Reward for RL-learning ===
         reward_distance = (-math.dist(self.pos_walker, self.pos_car))/1000
+        coli = self.collisionReward
+        self.collisionReward = 0
+        return reward_distance + coli + self.drive_fast_near_walker() + self.check_emergency_braking()
 
-        # End training if collision happend
-        if self.collisionReward > 0:
-            self.done = True
-
-        return reward_distance + self.collisionReward
     def render(self, mode="human"):
         # === Render Mode ===
         if mode == "human":
@@ -281,6 +300,7 @@ class CustomEnv(gym.Env):
         if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
             self.collisionReward = self.collisionReward + 1
             if intensity > 0:
+                self.done = True
                 print("Good Hit:", self.collisionReward)
             else:
                 print("Hit with Pedestrian: ", self.collisionReward)
@@ -293,6 +313,7 @@ class CustomEnv(gym.Env):
         self.collisionReward = 0
         self.ticks_near_car = 0
         self.done = False
+        self.old_vel = 10
         self.info = {"actions":[]}
         try:
             self.reset_walker()
