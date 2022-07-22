@@ -320,15 +320,20 @@ def optuna_trial(trial):
     # sde_sample_freq=- 1,
     # target_kl=None,
 
-    try:
-        return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
-    except:
-        print("fail optuna")
-        # Retry with new env
-        # time.sleep(180)
-        # global env
-        # env = CustomEnv(time_steps_per_training)
-        # return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
+    args_p = {
+        "learnrate": learnrate,
+        "epochs": epochs,
+        "batch_size": batch_size,
+        "n_epochs": n_epochs,
+        "gamma": gamma,
+        "gae_lambda": gae_lambda,
+        "clip_range": clip_range,
+        "ent_coef": ent_coef,
+        "vf_coef": vf_coef,
+        "policy_kwargs": policy_kwargs
+    }
+    return validate_trys(args_p)
+
 
 
 def validate_trys(p_kwargs):
