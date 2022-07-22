@@ -201,7 +201,7 @@ class CustomEnv(gym.Env):
     def drive_fast_near_walker(self):
         v_car = self.car.get_velocity()
         v_ms = math.sqrt(v_car.x * v_car.x + v_car.y * v_car.y + v_car.z * v_car.z)
-        if v_ms > 8 and math.dist(self.pos_walker, self.pos_car) < 10:
+        if v_ms > 10 and math.dist(self.pos_walker, self.pos_car) < 3:
             print("drive_fast_near_walker")
             return 0.2
         return 0
