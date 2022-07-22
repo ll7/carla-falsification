@@ -47,16 +47,23 @@
 - Ergebnisse Determinismus zusammenschreiben
 - Eigentschaften Model betrachten
 - 
-<hr>
 
-### KW 28
+### KW 28-29
 - Optuna mit mehr parametern
 - Zurück zum Eigentlichen Problem ... -> Klassifizierung finden und situation bewerten
 - Größeres Model?! 
+- Problem mit Envirionment Crash behoben 
+- Sehr viel Training 
+<hr>
+
+### KW 30 
 - Trainingsverfahren testen (PPO, A2C, DDPG, SAC, TD3)
 - Issue Github Determinism
 - Weitere Scenarien hinzufuegen (Interface zum schnellen Einfügen)
 - Force vector in Abhänigkeit wie das Fahrzeug steht + überlegung wie schnell soll fahrzeug sein
+
+### KW 36 
+- Anmeldung Masterarbeit!
 
 ### ToDo 
 - Abschlusspräsentation erstellen
