@@ -2,6 +2,8 @@ import sys
 import time
 import gym
 from time import sleep
+
+import joblib
 import tensorflow as tf
 import datetime
 from typing import Callable, Optional, Dict, List, Tuple, Type, Union
@@ -20,6 +22,7 @@ import torch as th
 sys.path.append(".")
 
 env = None
+
 
 class CustomNetwork(nn.Module):
     """
@@ -194,7 +197,8 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     return func
 
 def training_test(training_steps, time_steps_per_training,
-                  save_name, log_interall, learn_rate=0.0003, policy_kwargs=None):
+                  save_name, log_interall, learn_rate=0.0003, policy_kwargs=None, p_kwargs=None):
+    print("args_p", p_kwargs)
     # env = CustomEnv(time_steps_per_training)
     tmp_path = "./tmp/optuna_tb_big_net/" + str(training_steps) + "/" + str(save_name)
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
@@ -211,7 +215,31 @@ def training_test(training_steps, time_steps_per_training,
         policy_kwargs = dict(activation_fn=th.nn.ReLU,
                              net_arch=[dict(pi=[64, 64, 2048], vf=[64, 64, 2048])])
     # policy_kwargs = None
-    model = PPO("MlpPolicy", env, verbose=2, learning_rate=learn_rate, policy_kwargs=policy_kwargs)
+    model = None
+    if p_kwargs is None:
+        model = PPO("MlpPolicy", env, verbose=2, learning_rate=learn_rate, policy_kwargs=policy_kwargs)
+    else:
+        # batch_size = p_kwargs["batch_size"]
+        n_epochs = p_kwargs["n_epochs"]
+        gamma = p_kwargs["gamma"]
+        gae_lambda = p_kwargs["gae_lambda"]
+        clip_range = p_kwargs["clip_range"]
+        ent_coef = p_kwargs["ent_coef"]
+        vf_coef = p_kwargs["vf_coef"]
+
+        model = PPO("MlpPolicy",
+                    env=env,
+                    verbose=2,
+                    learning_rate=learn_rate,
+                    policy_kwargs=policy_kwargs,
+                    # batch_size=batch_size,
+                    n_epochs=n_epochs,
+                    gamma=gamma,
+                    gae_lambda=gae_lambda,
+                    clip_range=clip_range,
+                    ent_coef=ent_coef,
+                    vf_coef=vf_coef
+                    )
     # print(model.policy)
     model.set_logger(new_logger)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
@@ -274,18 +302,19 @@ def optuna_trial(trial):
         (first_layer, secound_layer, third_layer, fourth_layer),
         activation_function
     )
+    epochs = trial.suggest_int('epochs', 500, 1500)
     learnrate = trial.suggest_float('learnrate', 5e-6, 0.01)
     # policy = None
     # algorithm = None
-    # batch_size = trial.suggest_int('batch_size', 20, 3000)
-    # n_epochs = 300,
-    # gamma = trial.suggest_float('gamma', 0.7, 0.999)
-    # gae_lambda = trial.suggest_float('gae_lambda', 0.9, 1.0)
-    # clip_range = trial.suggest_discrete_uniform('clip_range', 0.1, 0.5, 0.1)
+    batch_size = trial.suggest_int('batch_size', 20, 3000)
+    n_epochs = trial.suggest_categorical('n_epochs', [512, 1024, 2048, 4096])
+    gamma = trial.suggest_float('gamma', 0.7, 0.999)
+    gae_lambda = trial.suggest_float('gae_lambda', 0.9, 1.0)
+    clip_range = trial.suggest_discrete_uniform('clip_range', 0.1, 0.5, 0.1)
     # clip_range_vf=None,
     # normalize_advantage=True,
-    # ent_coef = trial.suggest_float('ent_coef', 0.0, 0.02)
-    # vf_coef = trial.suggest_float('vf_coef', 0.5, 1.0)
+    ent_coef = trial.suggest_float('ent_coef', 0.0, 0.02)
+    vf_coef = trial.suggest_float('vf_coef', 0.5, 1.0)
     # max_grad_norm=0.5,
     # use_sde=False,
     # sde_sample_freq=- 1,
@@ -301,37 +330,65 @@ def optuna_trial(trial):
         # env = CustomEnv(time_steps_per_training)
         # return validate_trys(learnrate=learnrate, policy_kwargs=policy_kwargs)
 
-def validate_trys(learnrate, policy_kwargs):
+
+def validate_trys(p_kwargs):
     scores = []
+    learnrate = p_kwargs["learnrate"]
+    policy_kwargs = p_kwargs["policy_kwargs"]
+    training_steps = p_kwargs["epochs"]
+
     ### Mean of more runs because huge variaty of results but what we really want is a high reward...
     for i in range(3):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
+
         scores.append(training_test(training_steps, time_steps_per_training, save_name,
-                                    log_interall, learnrate, policy_kwargs))
+                                    log_interall, learnrate, policy_kwargs, p_kwargs))
     # Mean + Max / 2
-    return (sum(scores) / len(scores) + max(scores))/2
+    return (sum(scores) / len(scores) + max(scores)) / 2
 
 
 def opt_training(n_trials):
     study = optuna.create_study(direction='maximize')
-    study.optimize(optuna_trial, n_trials=n_trials)
+    now = time.time()
+    save_name = "study"+str(round(now))+".pkl"
+    joblib.dump(study, save_name)
+
+    for i in range(int(n_trials/2)):
+        study = joblib.load(save_name)
+        study.optimize(optuna_trial, n_trials=2)
+        joblib.dump(study, save_name)
+
 
 def manual_training():
+    args_p = {
+        "learnrate": 0.001,
+        "epochs": 10,
+        "batch_size": 10,
+        "n_epochs": 10,
+        "gamma": 0.99,
+        "gae_lambda": 0.1,
+        "clip_range": 0,
+        "ent_coef": 0,
+        "vf_coef": 0,
+        "policy_kwargs": 0
+    }
+    learnrate = args_p["learnrate"]
+    policy_kwargs = args_p["policy_kwargs"]
+    training_steps = args_p["epochs"]
 
     init_learnrates = [0.00015, 0.0003, 0.0006]
     for i2 in range(2):
         for i in range(len(init_learnrates)):
-            save_name = str(init_learnrates[i])+"_"+str(training_steps)+"_"+str(i2)
-            training_test(training_steps, time_steps_per_training, save_name, log_interall, init_learnrates[i])
+            save_name = str(init_learnrates[i]) + "_" + str(training_steps) + "_" + str(i2)
+            training_test(training_steps, time_steps_per_training, save_name,
+                          log_interall, learnrate, policy_kwargs, None)
 
 
 if __name__ == '__main__':
-    training_steps = 1000
     time_steps_per_training = 512
     log_interall = 1
 
     env = CustomEnv(time_steps_per_training)
     # env.render("human")
-    opt_training(n_trials=50)
+    opt_training(n_trials=500)
     # manual_training()
-
