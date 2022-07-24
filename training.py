@@ -306,8 +306,7 @@ def optuna_trial(trial):
     learnrate = trial.suggest_float('learnrate', 5e-6, 0.01)
     # policy = None
     # algorithm = None
-    batch_size = trial.suggest_int('batch_size', 20, 3000)
-    n_epochs = trial.suggest_categorical('n_epochs', [512, 1024, 2048, 4096])
+    batch_size = trial.suggest_categorical('batch_size', [512, 1024, 2048])
     gamma = trial.suggest_float('gamma', 0.7, 0.999)
     gae_lambda = trial.suggest_float('gae_lambda', 0.9, 1.0)
     clip_range = trial.suggest_discrete_uniform('clip_range', 0.1, 0.5, 0.1)

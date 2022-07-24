@@ -293,14 +293,15 @@ class CustomEnv(gym.Env):
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
         # To ensure that the initial force does not count as collision
-        if self.tick_count > 100:
+        if self.tick_count > 80:
             self.collisionReward = min(abs(intensity)*100 + 0.1, 100)
         else:
             self.collisionReward = 0
+
         if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
             self.collisionReward = self.collisionReward + 1
+            self.done = True
             if intensity > 0:
-                self.done = True
                 print("Good Hit:", self.collisionReward)
             else:
                 print("Hit with Pedestrian: ", self.collisionReward)

@@ -106,7 +106,7 @@ def test_actions(ticks, action_file, mode="human"):
             action = actions[i2]
             obs, reward, done, info = env.step(action)
             rewards += reward
-            # time.sleep(0.01)
+            time.sleep(0.01)
             if done:
                 print(rewards)
                 auswertung.append(rewards)
@@ -122,12 +122,12 @@ if __name__ == '__main__':
     # Modes: humanSync, human
 
     ticks = 512
-    # folder = "../tmp/"
-    folder = "../tmp/GoodModels/"
+    folder = "../tmp/"
+    # folder = "../tmp/GoodModels/"
     save_name = folder + "myModel1e-05_3000.zip"
-    action_file = folder + "Actions-3.73375"
+    action_file = folder + "Actions13.159948"
     # test_determinisWalker(ticks, save_name)
     # test_Results(ticks, save_name)
 
-    #test_actions(ticks, action_file, "humanSync")
-    test_actions(ticks, action_file, "human")
+    test_actions(ticks, action_file, "humanSync")
+    # test_actions(ticks, action_file, "human")
