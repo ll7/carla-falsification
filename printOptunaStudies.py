@@ -18,7 +18,7 @@ SEED = 42
 
 np.random.seed(SEED)
 
-study = joblib.load("study1658499520.pkl")
+study = joblib.load("study1658613782.pkl")
 
 plot = optuna.visualization.plot_param_importances(study)
 # plot = plot_optimization_history(study)

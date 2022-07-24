@@ -125,7 +125,8 @@ class CustomCallback(BaseCallback):
         """
         This method is called before the first rollout starts.
         """
-        self.best_result = -9999
+        # TODO set best Reward to -9999
+        self.best_result = -6
         pass
 
     def _on_step(self) -> bool:
@@ -219,8 +220,9 @@ def training_test(training_steps, time_steps_per_training,
     if p_kwargs is None:
         model = PPO("MlpPolicy", env, verbose=2, learning_rate=learn_rate, policy_kwargs=policy_kwargs)
     else:
-        # batch_size = p_kwargs["batch_size"]
-        n_epochs = p_kwargs["n_epochs"]
+        print("Creating Model")
+        batch_size = p_kwargs["batch_size"]
+        # n_epochs = p_kwargs["n_epochs"]
         gamma = p_kwargs["gamma"]
         gae_lambda = p_kwargs["gae_lambda"]
         clip_range = p_kwargs["clip_range"]
@@ -232,8 +234,7 @@ def training_test(training_steps, time_steps_per_training,
                     verbose=2,
                     learning_rate=learn_rate,
                     policy_kwargs=policy_kwargs,
-                    # batch_size=batch_size,
-                    n_epochs=n_epochs,
+                    batch_size=batch_size,
                     gamma=gamma,
                     gae_lambda=gae_lambda,
                     clip_range=clip_range,
@@ -247,7 +248,7 @@ def training_test(training_steps, time_steps_per_training,
                 callback=cb)
     model.save("./tmp/test_Model" + str(save_name))
     # env.close()
-
+    print("End Learning")
     return cb.best_result
 
 def render_model(model, env, time_sleep=0.01):
@@ -291,6 +292,7 @@ def create_policy_kwargs(layer, layersize, activation_fn):
 
 
 def optuna_trial(trial):
+    print("Start Trail")
     first_layer = trial.suggest_categorical('first_layer', [64, 128, 256, 512, 1024, 2048])
     secound_layer = trial.suggest_categorical('secound_layer', [64, 128, 256, 512, 1024, 2048])
     third_layer = trial.suggest_categorical('third_layer', [64, 128, 256, 512, 1024, 2048])
@@ -323,7 +325,6 @@ def optuna_trial(trial):
         "learnrate": learnrate,
         "epochs": epochs,
         "batch_size": batch_size,
-        "n_epochs": n_epochs,
         "gamma": gamma,
         "gae_lambda": gae_lambda,
         "clip_range": clip_range,
@@ -331,6 +332,7 @@ def optuna_trial(trial):
         "vf_coef": vf_coef,
         "policy_kwargs": policy_kwargs
     }
+    print("args_p", args_p)
     return validate_trys(args_p)
 
 
@@ -342,7 +344,7 @@ def validate_trys(p_kwargs):
     training_steps = p_kwargs["epochs"]
 
     ### Mean of more runs because huge variaty of results but what we really want is a high reward...
-    for i in range(3):
+    for i in range(1):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
 
         scores.append(training_test(training_steps, time_steps_per_training, save_name,
@@ -355,12 +357,18 @@ def opt_training(n_trials):
     study = optuna.create_study(direction='maximize')
     now = time.time()
     save_name = "study"+str(round(now))+".pkl"
+    # save_name = "study1658613782.pkl"
+    # print("NEW STUDY: ", save_name)
     joblib.dump(study, save_name)
 
     for i in range(int(n_trials/2)):
         study = joblib.load(save_name)
-        study.optimize(optuna_trial, n_trials=2)
-        joblib.dump(study, save_name)
+        try:
+            study.optimize(optuna_trial, n_trials=3)
+            joblib.dump(study, save_name)
+            time.sleep(1)
+        except Exception as e:
+            print("Fail to optuna trials", e)
 
 
 def manual_training():
