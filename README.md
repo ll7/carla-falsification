@@ -53,6 +53,13 @@ pip3 install optuna
 
 pip3 install tensorboard
 
+### Visualization
+
+pip install plotly
+
+pip install sklearn
+
+
 
 #### Used Verions: 
 - pygame                            2.1.2
