@@ -360,14 +360,6 @@ def opt_training(n_trials):
     # save_name = "study1658613782.pkl"
     # print("NEW STUDY: ", save_name)
     # joblib.dump(study, save_name)
-
-    storage = optuna.storages.RDBStorage(
-        url='mysql://axel:123@localhost/optuna',
-        engine_kwargs={
-            'pool_size': 20,
-            'max_overflow': 0
-        }
-    )
     # study = optuna.create_study(storage=storage)
 
     storage = optuna.storages.RDBStorage(
