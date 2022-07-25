@@ -359,16 +359,38 @@ def opt_training(n_trials):
     save_name = "study"+str(round(now))+".pkl"
     # save_name = "study1658613782.pkl"
     # print("NEW STUDY: ", save_name)
-    joblib.dump(study, save_name)
+    # joblib.dump(study, save_name)
 
-    for i in range(int(n_trials/2)):
-        study = joblib.load(save_name)
-        try:
-            study.optimize(optuna_trial, n_trials=3)
-            joblib.dump(study, save_name)
-            time.sleep(1)
-        except Exception as e:
-            print("Fail to optuna trials", e)
+    storage = optuna.storages.RDBStorage(
+        url='mysql://axel:123@localhost/optuna',
+        engine_kwargs={
+            'pool_size': 20,
+            'max_overflow': 0
+        }
+    )
+    # study = optuna.create_study(storage=storage)
+
+    storage = optuna.storages.RDBStorage(
+        url='mysql://test:123@137.250.121.31/optuna',
+        engine_kwargs={
+            'pool_size': 20,
+            'max_overflow': 0
+        }
+    )
+    study = optuna.load_study(
+        study_name="rl-learning", storage=storage
+    )
+    study.optimize(optuna_trial, n_trials=1000)
+
+    #
+    # for i in range(int(n_trials/2)):
+    #     study = joblib.load(save_name)
+    #     try:
+    #         study.optimize(optuna_trial, n_trials=3)
+    #         joblib.dump(study, save_name)
+    #         time.sleep(1)
+    #     except Exception as e:
+    #         print("Fail to optuna trials", e)
 
 
 def manual_training():
