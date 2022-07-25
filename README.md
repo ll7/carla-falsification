@@ -59,7 +59,8 @@ pip install plotly
 
 pip install sklearn
 
-
+sudo apt-get install libmysqlclient-dev
+sudo -H pip3 install mysqlclient
 
 #### Used Verions: 
 - pygame                            2.1.2
