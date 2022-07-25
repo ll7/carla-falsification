@@ -125,8 +125,7 @@ class CustomCallback(BaseCallback):
         """
         This method is called before the first rollout starts.
         """
-        # TODO set best Reward to -9999
-        self.best_result = -6
+        self.best_result = -9999
         pass
 
     def _on_step(self) -> bool:
@@ -148,18 +147,19 @@ class CustomCallback(BaseCallback):
                 try:
                     if log_reward > self.best_result:
                         print(self.n_calls / self.log_interval, ':', log_reward)
-
-                        self.model.save("./tmp/Callback" + str(log_reward))
-                        actions = self.locals['infos'][0]['actions']
-                        try:
-                            f = open("./tmp/Actions" + str(log_reward), "w")
-                            for action in actions:
-                                f.write("%s\n" % action)
-                            f.close()
-                        except:
-                            print("Save actions failed!")
-                        # print(actions)
                         self.best_result = log_reward
+                        # Just save models with score higher -5 #TODO
+                        if (log_reward>-10):
+                            self.model.save("./tmp/Callback" + str(log_reward))
+                            actions = self.locals['infos'][0]['actions']
+                            try:
+                                f = open("./tmp/Actions" + str(log_reward), "w")
+                                for action in actions:
+                                    f.write("%s\n" % action)
+                                f.close()
+                            except:
+                                print("Save actions failed!")
+                        # print(actions)
                 except:
                     print("save faild")
             except:
@@ -344,7 +344,7 @@ def validate_trys(p_kwargs):
     training_steps = p_kwargs["epochs"]
 
     ### Mean of more runs because huge variaty of results but what we really want is a high reward...
-    for i in range(1):
+    for i in range(3):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
 
         scores.append(training_test(training_steps, time_steps_per_training, save_name,
