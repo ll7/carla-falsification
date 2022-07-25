@@ -370,7 +370,7 @@ def opt_training(n_trials):
         }
     )
     study = optuna.load_study(
-        study_name="rl-learning", storage=storage
+        study_name="learning2", storage=storage
     )
     study.optimize(optuna_trial, n_trials=1000)
 
