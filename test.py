@@ -14,11 +14,11 @@ storage = optuna.storages.RDBStorage(
  )
 
 
-# study = optuna.create_study(study_name="test1", storage=storage)
+study = optuna.create_study(study_name="learning2", storage=storage, direction='maximize')
 # study.optimize(objective)
 
-study = optuna.load_study(
-        study_name="test1", storage=storage
-    )
-study.optimize(objective, n_trials=10)
+# study = optuna.load_study(
+#         study_name="test1", storage=storage
+#     )
+# study.optimize(objective, n_trials=10)
 
