@@ -5,6 +5,7 @@ import glob
 import math
 import os
 import sys
+from typing import Tuple
 
 from setuptools.command.dist_info import dist_info
 
@@ -44,12 +45,15 @@ class CustomEnv(gym.Env):
         # Example when using discrete actions:
 
         # === Gym Variables ===
-        self.action_space = Box(low=-1, high=1, shape=(2,), dtype=np.float32)
-        obs_size = 8
+        high_action = np.array([1, 1, 5])
+        low_action = np.array([-1, -1, 0])
+        self.action_space = Box(low=low_action, high=high_action, shape=(3,), dtype=np.float32)
+
         # high = np.array([-500] * obs_size)
-        high = np.array([500, 500, 500, 500, 50, 50, 50, 50])
+        high = np.array([500, 500, 500, 500, 50, 50, 50, 50, 1, 1])
         # low = np.array([500] * obs_size)
-        low = np.array([0, 0, 0, 0, -50, -50, -50, -50])
+        low = np.array([0, 0, 0, 0, -50, -50, -50, -50, -1, -1])
+        obs_size = len(high)
         self.observation_space = spaces.Box(low=low, high=high,
                                             shape=(obs_size,), dtype=np.float32)
 
@@ -230,8 +234,7 @@ class CustomEnv(gym.Env):
         a1 = math.degrees(self.vector_to_dir(unit_location))
         a2 = math.degrees(self.vector_to_dir(dir_vec))
         if (a1 - a2 < -90) or (a1 + a2 > 90):
-            print(a1, a2)
-            return -0.05
+            return -0.04
 
 
         return 0
@@ -268,7 +271,11 @@ class CustomEnv(gym.Env):
 
     def step(self, action):
         # === Let the walker do a move ===
-        # action = get_round_values(action, 1)
+        self.max_walking_speed = float(round(action[2], 2))
+        if self.max_walking_speed < 0.01:
+            self.max_walking_speed = 0.01
+
+        action = np.array([action[0], action[1]])
         action_length = np.linalg.norm(action)
         if action_length == 0.0:
             # the chances are slim, but theoretically both actions could be 0.0
@@ -364,7 +371,6 @@ class CustomEnv(gym.Env):
         vel_car = [get_vel2.x, get_vel2.y]
 
         direction = self.walker.get_control().direction
-        # print(direction.x , direction.y, direction.z)
         dir_vec = [direction.x, direction.y]
         observation = self.pos_car + self.pos_walker + vel_walker + vel_car + dir_vec
         observation = np.array(observation)
