@@ -201,7 +201,7 @@ def training_test(training_steps, time_steps_per_training,
                   save_name, log_interall, learn_rate=0.0003, policy_kwargs=None, p_kwargs=None):
     print("args_p", p_kwargs)
     # env = CustomEnv(time_steps_per_training)
-    tmp_path = "./tmp/optuna_tb_big_net/" + str(training_steps) + "/" + str(save_name)
+    tmp_path = "./tmp/optuna_tb_big_net_2/" + str(training_steps) + "/" + str(save_name)
     new_logger = configure(tmp_path, ["tensorboard", "stdout"])
 
     # required before you can step the environment
@@ -293,29 +293,33 @@ def create_policy_kwargs(layer, layersize, activation_fn):
 
 def optuna_trial(trial):
     print("Start Trail")
+    layers = trial.suggest_categorical('layers', [2, 3, 4])
+
     first_layer = trial.suggest_categorical('first_layer', [64, 128, 256, 512, 1024, 2048])
     secound_layer = trial.suggest_categorical('secound_layer', [64, 128, 256, 512, 1024, 2048])
-    third_layer = trial.suggest_categorical('third_layer', [64, 128, 256, 512, 1024, 2048])
-    fourth_layer = trial.suggest_categorical('fourth_layer', [64, 128, 256, 512, 1024, 2048])
-    layers = trial.suggest_categorical('layers', [2, 3, 4])
+    if layers > 2:
+        third_layer = trial.suggest_categorical('third_layer', [64, 128, 256, 512, 1024, 2048])
+    if layers > 3:
+        fourth_layer = trial.suggest_categorical('fourth_layer', [64, 128, 256, 512, 1024, 2048])
+
     activation_function = trial.suggest_categorical('activation_function', ["ReLU", "Sigmoid", "Tanh"])
     policy_kwargs = create_policy_kwargs(
         layers,
         (first_layer, secound_layer, third_layer, fourth_layer),
         activation_function
     )
-    epochs = trial.suggest_int('epochs', 500, 1500)
-    learnrate = trial.suggest_float('learnrate', 5e-6, 0.01)
+    epochs = trial.suggest_int('epochs', 700, 1500)
+    learnrate = trial.suggest_float('learnrate', 5e-6, 0.007)
     # policy = None
     # algorithm = None
     batch_size = trial.suggest_categorical('batch_size', [512, 1024, 2048])
-    gamma = trial.suggest_float('gamma', 0.7, 0.999)
-    gae_lambda = trial.suggest_float('gae_lambda', 0.9, 1.0)
+    gamma = trial.suggest_float('gamma', 0.5, 0.999)
+    gae_lambda = trial.suggest_float('gae_lambda', 0.8, 1.0)
     clip_range = trial.suggest_discrete_uniform('clip_range', 0.1, 0.5, 0.1)
     # clip_range_vf=None,
     # normalize_advantage=True,
-    ent_coef = trial.suggest_float('ent_coef', 0.0, 0.02)
-    vf_coef = trial.suggest_float('vf_coef', 0.5, 1.0)
+    ent_coef = trial.suggest_float('ent_coef', 0.0, 0.05)
+    vf_coef = trial.suggest_float('vf_coef', 0.3, 1.0)
     # max_grad_norm=0.5,
     # use_sde=False,
     # sde_sample_freq=- 1,
@@ -370,7 +374,7 @@ def opt_training(n_trials):
         }
     )
     study = optuna.load_study(
-        study_name="learning2", storage=storage
+        study_name="learning4", storage=storage
     )
     study.optimize(optuna_trial, n_trials=1000)
 
