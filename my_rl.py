@@ -122,6 +122,7 @@ class CustomEnv(gym.Env):
         transform_car_default = self.world.get_map().get_spawn_points()[89]
 
         self.spawn_points.append(transform_walker_default)
+        self.spawn_points[0].location.y = self.spawn_points[0].location.y + 8
         self.spawn_points.append(transform_car_default)
 
         # === walker ===
@@ -293,6 +294,7 @@ class CustomEnv(gym.Env):
         direction = carla.Vector3D(x=float(unit_action[0]), y=float(unit_action[1]), z=0.0)
         walker_control = carla.WalkerControl(
             direction, speed=self.max_walking_speed, jump=False)
+        unit_action = np.append(unit_action, [self.max_walking_speed])
         self.info["actions"].append(unit_action.tolist())
         self.walker.apply_control(walker_control)
 

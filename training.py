@@ -149,7 +149,7 @@ class CustomCallback(BaseCallback):
                         print(self.n_calls / self.log_interval, ':', log_reward)
                         self.best_result = log_reward
                         # Just save models with score higher -5 #TODO
-                        if (log_reward>-10):
+                        if (log_reward>-15):
                             self.model.save("./tmp/Callback" + str(log_reward))
                             actions = self.locals['infos'][0]['actions']
                             try:
@@ -297,6 +297,8 @@ def optuna_trial(trial):
 
     first_layer = trial.suggest_categorical('first_layer', [64, 128, 256, 512, 1024, 2048])
     secound_layer = trial.suggest_categorical('secound_layer', [64, 128, 256, 512, 1024, 2048])
+    third_layer = 0
+    fourth_layer = 0
     if layers > 2:
         third_layer = trial.suggest_categorical('third_layer', [64, 128, 256, 512, 1024, 2048])
     if layers > 3:
