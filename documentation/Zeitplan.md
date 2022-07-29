@@ -62,6 +62,16 @@
 - Weitere Scenarien hinzufuegen (Interface zum schnellen Einfügen)
 - Force vector in Abhänigkeit wie das Fahrzeug steht + überlegung wie schnell soll fahrzeug sein
 
+### KW 31 
+- Rewardfunktion (nicht richtung Auto schauen)
+- Startposition Gehweg
+- Action Space erweitern (v walker)
+- Observation Space (Orientation Walker) 
+- Optuna Training starten 
+- Optuna Doku
+- Parameter verstehen 
+
+
 ### KW 36 
 - Anmeldung Masterarbeit!
 
