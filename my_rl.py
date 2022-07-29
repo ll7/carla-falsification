@@ -218,12 +218,35 @@ class CustomEnv(gym.Env):
             return 0.1
         return 0
 
+    def open_your_eyes(self):
+        # Ignore direction if the car is far away
+        # if math.dist(self.pos_walker, self.pos_car) > 50:
+        #     return 0
+
+        direction = self.walker.get_control().direction
+        dir_vec = [direction.x, direction.y]
+
+        unit_location = [self.pos_walker[0] - self.pos_car[0], self.pos_walker[1] - self.pos_car[1]]
+        a1 = math.degrees(self.vector_to_dir(unit_location))
+        a2 = math.degrees(self.vector_to_dir(dir_vec))
+        if (a1 - a2 < -90) or (a1 + a2 > 90):
+            print(a1, a2)
+            return -0.05
+
+
+        return 0
+
+
+
     def reward_calculation(self):
         # === Calculate Reward for RL-learning ===
         reward_distance = (-math.dist(self.pos_walker, self.pos_car))/1000
         coli = self.collisionReward
         self.collisionReward = 0
-        return reward_distance + coli + self.drive_fast_near_walker() + self.check_emergency_braking()
+        return reward_distance + coli + \
+               self.drive_fast_near_walker() + \
+               self.check_emergency_braking() + \
+               self.open_your_eyes()
 
     def render(self, mode="human"):
         # === Render Mode ===
@@ -300,6 +323,12 @@ class CustomEnv(gym.Env):
 
         if (actor_we_collide_against.type_id == "walker.pedestrian.0012"):
             self.collisionReward = self.collisionReward + 1
+            v_car = self.car.get_velocity()
+            v_ms = math.sqrt(v_car.x * v_car.x + v_car.y * v_car.y + v_car.z * v_car.z)
+
+            if v_ms > 1:
+                self.collisionReward = self.collisionReward + v_ms/10
+                print("Car has velocity of: ", v_ms)
             self.done = True
             if intensity > 0:
                 print("Good Hit:", self.collisionReward)
@@ -333,9 +362,49 @@ class CustomEnv(gym.Env):
 
         get_vel2 = self.car.get_velocity()
         vel_car = [get_vel2.x, get_vel2.y]
-        observation = self.pos_car + self.pos_walker + vel_walker + vel_car
+
+        direction = self.walker.get_control().direction
+        # print(direction.x , direction.y, direction.z)
+        dir_vec = [direction.x, direction.y]
+        observation = self.pos_car + self.pos_walker + vel_walker + vel_car + dir_vec
         observation = np.array(observation)
         return observation
+
+    def vector_to_dir(self, vector):
+        """Get the given vector's direction in radians within [-pi, pi)"""
+        normed_vector = self.norm_vector(vector)
+        angle = math.atan2(normed_vector[1], normed_vector[0])
+        return self.norm_angle(angle)
+
+    def norm_angle(self, angle_rad: float) -> float:
+        """Normalize the given angle within [-pi, +pi)"""
+        while angle_rad > math.pi:
+            angle_rad -= 2.0 * math.pi
+        while angle_rad < -math.pi:
+            angle_rad += 2.0 * math.pi
+        if angle_rad == math.pi:
+            angle_rad = -math.pi
+
+        if angle_rad < -math.pi or angle_rad >= math.pi:
+            print('norm angle failed! this should never happen')
+
+        return angle_rad
+    def norm_vector(self, vector):
+        """Normalize the given vector to a proportional vector of length 1"""
+        return self.scale_vector(vector, 1.0)
+
+    def vector_len(self, vec):
+        """Compute the given vector's length"""
+        return math.sqrt(vec[0] ** 2 + vec[1] ** 2)
+
+    def scale_vector(self, vector, new_len):
+        """Amplify the length of the given vector"""
+        old_len = self.vector_len(vector)
+        if old_len == 0:
+            return (0, 0)
+        scaled_vector = (vector[0] * new_len / old_len,
+                         vector[1] * new_len / old_len)
+        return scaled_vector
 
 
     def reset_walker(self):
