@@ -47,7 +47,7 @@ class CustomEnv(gym.Env):
         # === Gym Variables ===
         high_action = np.array([1, 1, 5])
         low_action = np.array([-1, -1, 0])
-        self.action_space = Box(low=low_action, high=high_action, shape=(3,), dtype=np.float32)
+        self.action_space = Box(low=-1, high=1, shape=(3,), dtype=np.float32)
 
         # high = np.array([-500] * obs_size)
         high = np.array([500, 500, 500, 500, 50, 50, 50, 50, 1, 1])
@@ -72,7 +72,7 @@ class CustomEnv(gym.Env):
         self.world = self.client.get_world()
         self.blueprint_library = self.world.get_blueprint_library()
         self.actor_list = []
-
+        self.action3 = 1
         # === set correct map ===
         self.map = self.world.get_map()
         if not self.map.name.endswith(self.town):
@@ -272,9 +272,10 @@ class CustomEnv(gym.Env):
 
     def step(self, action):
         # === Let the walker do a move ===
-        self.max_walking_speed = float(round(action[2], 2))
-        if self.max_walking_speed < 0.01:
-            self.max_walking_speed = 0.01
+
+        # Factor of Max wlaker speed (0 - 1)
+        self.action3 = abs(float(round(action[2], 2)))
+
 
         action = np.array([action[0], action[1]])
         action_length = np.linalg.norm(action)
@@ -292,9 +293,10 @@ class CustomEnv(gym.Env):
         #           self.walker.get_angular_velocity(), self.walker.get_acceleration(), action_length)
 
         direction = carla.Vector3D(x=float(unit_action[0]), y=float(unit_action[1]), z=0.0)
+        walker_speed = self.action3 * self.max_walking_speed
         walker_control = carla.WalkerControl(
-            direction, speed=self.max_walking_speed, jump=False)
-        unit_action = np.append(unit_action, [self.max_walking_speed])
+            direction, speed=walker_speed, jump=False)
+        unit_action = np.append(unit_action, [walker_speed])
         self.info["actions"].append(unit_action.tolist())
         self.walker.apply_control(walker_control)
 
@@ -353,6 +355,7 @@ class CustomEnv(gym.Env):
         self.ticks_near_car = 0
         self.done = False
         self.old_vel = 10
+        self.action3 = 1
         self.info = {"actions":[]}
         try:
             self.reset_walker()

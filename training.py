@@ -267,7 +267,7 @@ def render_model(model, env, time_sleep=0.01):
 
 def create_policy_kwargs(layer, layersize, activation_fn):
     if activation_fn == "Linear":
-        activation_fn = th.nn.Linear
+        activation_fn = th.nn.Linear(10,3)
     elif activation_fn == "ReLU":
         activation_fn = th.nn.ReLU
     elif activation_fn == "Sigmoid":
@@ -304,7 +304,7 @@ def optuna_trial(trial):
     if layers > 3:
         fourth_layer = trial.suggest_categorical('fourth_layer', [64, 128, 256, 512, 1024, 2048])
 
-    activation_function = trial.suggest_categorical('activation_function', ["ReLU", "Sigmoid", "Tanh"])
+    activation_function = "Tanh" #trial.suggest_categorical('activation_function', ["ReLU", "Sigmoid", "Tanh", "Linear"])
     policy_kwargs = create_policy_kwargs(
         layers,
         (first_layer, secound_layer, third_layer, fourth_layer),
@@ -376,7 +376,7 @@ def opt_training(n_trials):
         }
     )
     study = optuna.load_study(
-        study_name="learning4", storage=storage
+        study_name="learning5", storage=storage
     )
     study.optimize(optuna_trial, n_trials=1000)
 
