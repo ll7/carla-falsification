@@ -241,7 +241,7 @@ def training_test(training_steps, time_steps_per_training,
                     ent_coef=ent_coef,
                     vf_coef=vf_coef
                     )
-    # print(model.policy)
+    print(model.policy)
     model.set_logger(new_logger)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
                 log_interval=log_interall,
@@ -304,7 +304,7 @@ def optuna_trial(trial):
     if layers > 3:
         fourth_layer = trial.suggest_categorical('fourth_layer', [64, 128, 256, 512, 1024, 2048])
 
-    activation_function = "Tanh" #trial.suggest_categorical('activation_function', ["ReLU", "Sigmoid", "Tanh", "Linear"])
+    activation_function = trial.suggest_categorical('activation_function', ["ReLU", "Sigmoid", "Tanh"])
     policy_kwargs = create_policy_kwargs(
         layers,
         (first_layer, secound_layer, third_layer, fourth_layer),
@@ -350,7 +350,7 @@ def validate_trys(p_kwargs):
     training_steps = p_kwargs["epochs"]
 
     ### Mean of more runs because huge variaty of results but what we really want is a high reward...
-    for i in range(5):
+    for i in range(2):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
 
         scores.append(training_test(training_steps, time_steps_per_training, save_name,
@@ -376,7 +376,7 @@ def opt_training(n_trials):
         }
     )
     study = optuna.load_study(
-        study_name="learning5", storage=storage
+        study_name="learning6", storage=storage
     )
     study.optimize(optuna_trial, n_trials=1000)
 
