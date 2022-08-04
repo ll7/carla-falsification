@@ -13,7 +13,9 @@ storage = optuna.storages.RDBStorage(
  )
 
 study = optuna.load_study(
-        study_name="learning2", storage=storage
+        # study_name="learning2", storage=storage
+        # study_name="learning4", storage=storage
+        study_name="learning5", storage=storage
     )
 
 
