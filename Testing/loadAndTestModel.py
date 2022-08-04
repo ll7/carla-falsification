@@ -104,6 +104,10 @@ def test_actions(ticks, action_file, mode="human"):
     for i in range(10):
         for i2 in range(env.max_tick_count):
             action = actions[i2]
+            if len(action) == 2:
+                action.append(5)
+            if i == 0:
+                action[2] = action[2]/5
             obs, reward, done, info = env.step(action)
             rewards += reward
             # time.sleep(0.01)
