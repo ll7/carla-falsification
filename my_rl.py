@@ -231,12 +231,12 @@ class CustomEnv(gym.Env):
         direction = self.walker.get_control().direction
         dir_vec = [direction.x, direction.y]
 
-        unit_location = [self.pos_walker[0] - self.pos_car[0], self.pos_walker[1] - self.pos_car[1]]
+        unit_location = [-self.pos_walker[0] + self.pos_car[0], -self.pos_walker[1] + self.pos_car[1]]
         a1 = math.degrees(self.vector_to_dir(unit_location))
         a2 = math.degrees(self.vector_to_dir(dir_vec))
-        if (a1 - a2 < -90) or (a1 + a2 > 90):
-            return -0.04
 
+        if (self.norm_angle_deg(a1+90) > a2) or (self.norm_angle_deg(a1 - 90) < a2):
+            return -0.04
 
         return 0
 
@@ -400,6 +400,17 @@ class CustomEnv(gym.Env):
             print('norm angle failed! this should never happen')
 
         return angle_rad
+
+    def norm_angle_deg(self, deg_angle: float) -> float:
+        """Normalize the given angle within [-pi, +pi)"""
+        while deg_angle > 180:
+            deg_angle -= 360
+        while deg_angle < -180:
+            deg_angle += 360
+        if deg_angle == 180:
+            deg_angle = -180
+        return deg_angle
+
     def norm_vector(self, vector):
         """Normalize the given vector to a proportional vector of length 1"""
         return self.scale_vector(vector, 1.0)
