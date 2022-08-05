@@ -57,10 +57,10 @@
 <hr>
 
 ### KW 30 
-- Trainingsverfahren testen (PPO, A2C, DDPG, SAC, TD3)
-- Issue Github Determinism
-- Weitere Scenarien hinzufuegen (Interface zum schnellen Einfügen)
-- Force vector in Abhänigkeit wie das Fahrzeug steht + überlegung wie schnell soll fahrzeug sein
+- Optuna multirechner setup 
+- parameterraum vergrößern
+- erste Auswertung was gute Parameter sein können  
+- überlegung wie schnell soll fahrzeug sein -> 30kmh zum start
 
 ### KW 31 
 - Rewardfunktion (nicht richtung Auto schauen)
@@ -71,6 +71,10 @@
 - Optuna Doku
 - Parameter verstehen 
 
+### KW 32 
+- Rewardfunktion anpassen 
+- Issue Github Determinism
+- Weitere Scenarien hinzufuegen
 
 ### KW 36 
 - Anmeldung Masterarbeit!
