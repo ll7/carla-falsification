@@ -29,7 +29,7 @@ For a multicomputer setup it's needed to create a database for the communication
 1. Open mysql with pivileged user 
 In my case I insall MySQL-DB and create a user with a password and with pivileges to create/ write/ read and update db's. 
 
-2. Create a New Datebase 
+2. Create a New Datebase:
 
     CREATE DATABASE IF NOT EXISTS example; 
     
