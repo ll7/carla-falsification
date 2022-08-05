@@ -75,8 +75,9 @@
 
 ### KW 32 
 - Rewardfunktion anpassen 
+- Doku installation + optuna + schicken
 - Issue Github Determinism
-- Weitere Scenarien hinzufuegen
+
 
 ### KW 36 
 - Anmeldung Masterarbeit!
