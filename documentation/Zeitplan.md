@@ -54,7 +54,7 @@
 - Größeres Model?! 
 - Problem mit Envirionment Crash behoben 
 - Sehr viel Training 
-<hr>
+
 
 ### KW 30 
 - Optuna multirechner setup 
@@ -70,6 +70,8 @@
 - Optuna Training starten 
 - Optuna Doku
 - Parameter verstehen 
+
+<hr>
 
 ### KW 32 
 - Rewardfunktion anpassen 
