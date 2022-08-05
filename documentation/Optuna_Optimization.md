@@ -20,7 +20,8 @@ Optuna is an automatic hyperparameter optimization software framework, particula
 ## Setup a multicomputer setup 
 
 First you need to install optuna for python
-- pip install optuna
+    
+    pip install optuna
 
 
 After install it, verify if optuna works and understand the basics with this small example:
