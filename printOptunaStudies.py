@@ -13,14 +13,19 @@ storage = optuna.storages.RDBStorage(
  )
 
 study = optuna.load_study(
-        # study_name="learning2", storage=storage
+        study_name="learning2", storage=storage
         # study_name="learning4", storage=storage
-        study_name="learning5", storage=storage
+        # study_name="learning5", storage=storage
+        # study_name="learning6", storage=storage
     )
 
-
-
-
+# What is represented in witch study?
+# learning2 first long training with 160 trial, walker spawn on the street and
+    # the result is that the walker run directly into the car
+# learning4 spawn on sidewalk, bigger obs and action space, new reward added,
+    # that the walker does not run directly into the car
+# learning5 same as learning 4 just that the walker speed is represented only between -1 and 1 iststeed of 0-5
+# learning 6: small sample size but fix and normalization bug
 # === Suggested Values after 150 Trials ===
 
 # args_p = {
@@ -47,7 +52,7 @@ plot = plot_optimization_history(study)
 plot.show()
 
 plot = optuna.visualization.plot_contour(study)
-plot = optuna.visualization.plot_contour(study, params=["first_layer", "secound_layer", "third_layer"])
+plot = optuna.visualization.plot_contour(study, params=["first_layer", "secound_layer", "learnrate"])
 plot.show()
 
 fig = optuna.visualization.plot_slice(study, params=["first_layer", "secound_layer","layers"])
