@@ -158,5 +158,7 @@ Start Carla and Load file:
   
     cd home/carla-falsification/Testing/
     python3 loadAndTestModel.py
- 
+
+Note: Only good Actions and good intermediate results are saved and can load afterwards. 
+
 </details>
