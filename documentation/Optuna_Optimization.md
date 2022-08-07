@@ -39,9 +39,14 @@ After install it, verify if optuna works and understand the basics with this sma
 
 For a multicomputer setup it's needed to create a database for the communication. 
 
-Open mysql with pivileged user 
+Open mysql with root user  
 In my case I insall MySQL-DB and create a user with a password and with pivileges to create/ write/ read and update db's. 
-
+    
+    sudo mysql
+    CREATE USER 'myuser'@'%' IDENTIFIED BY 'mypass';
+    GRANT ALL ON *.* TO 'myuser'@'%';
+    FLUSH PRIVILEGES;
+    
 Create a New Datebase:
 
     CREATE DATABASE IF NOT EXISTS example; 
