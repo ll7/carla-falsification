@@ -148,4 +148,15 @@ For visualize results of Optuna, modify storage and study name if needed in prin
     cd home/carla-falsification/
     python3 printOptunaStudies.py
 
+It is also possible to load and display previous saved Models. At the moment the file is a bit messy but it is still usable. 
+To use it is needed to spezify the folder and fileanmes in the loadAndTestModel.py file. To load actions uncomment test_actions in mail otherwise to load an test saved Model uncomment test_Results. Before executing python file zou need to start Carla. 
+  
+Start Carla and Load file: 
+    
+    cd /opt/carla-simulator
+    ./CarlaUE4.sh
+  
+    cd home/carla-falsification/Testing/
+    python3 loadAndTestModel.py
+ 
 </details>
