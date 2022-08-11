@@ -3,7 +3,7 @@
 ## Synchronous mode in Carla
 Carla Doku: https://carla.readthedocs.io/en/latest/adv_traffic_manager/#synchronous-mode
 
-In Carla there are a Synchronous  Mode and a Asynchronous Mode witch can set via the world settings.
+In Carla there are a Synchronous Mode and a Asynchronous Mode witch can set via the world settings.
 ( settings.synchronous_mode = True ). For the traffic manager there is also an async and a sync mode 
 witch can be activated via traffic_manager.set_synchronous_mode(True).
 
