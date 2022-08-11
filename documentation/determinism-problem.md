@@ -7,7 +7,7 @@ In Carla there are a Synchronous Mode and a Asynchronous Mode witch can set via 
 `settings.synchronous_mode = True` [soruce](https://carla.readthedocs.io/en/latest/python_api/#carlaworldsettings). For the traffic manager there is also an async and a sync mode 
 witch can be activated via traffic_manager.set_synchronous_mode(True).
 
-According to Carla's documentation determinism can just achieve if the Traffic Manager and the Carla are 
+According to Carla's documentation, determinism can just achieve if the Traffic Manager and the Carla are 
 set to Synchronous mode. But if both modes are set to Sync mode the simulation are still variate a bit each
 execution. This can effect the behavior that much, that sometimes there is a collision and sometimes the car miss
 the walker. 
