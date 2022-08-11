@@ -63,6 +63,8 @@ class CustomEnv(gym.Env):
         self.max_tick_count = time_steps_per_training
         self.ticks_near_car = 0
         self.old_vel = 10
+        self.reward_steps_max = 5
+        self.reward_step = 0
         # === Carla ===
         self.host = 'localhost'
         self.town = 'Town01'
@@ -236,7 +238,7 @@ class CustomEnv(gym.Env):
         a2 = math.degrees(self.vector_to_dir(dir_vec))
 
         if (self.norm_angle_deg(a1+90) > a2) or (self.norm_angle_deg(a1 - 90) < a2):
-            return -0.04
+            return -0.001
 
         return 0
 
@@ -247,10 +249,11 @@ class CustomEnv(gym.Env):
         reward_distance = (-math.dist(self.pos_walker, self.pos_car))/1000
         coli = self.collisionReward
         self.collisionReward = 0
-        return reward_distance + coli + \
-               self.drive_fast_near_walker() + \
-               self.check_emergency_braking() + \
-               self.open_your_eyes()
+        reward_every_time = coli + self.drive_fast_near_walker() +\
+                            self.check_emergency_braking() + self.open_your_eyes()
+        if self.reward_step % self.reward_steps_max == 0:
+            return reward_every_time + reward_distance
+        return reward_every_time
 
     def render(self, mode="human"):
         # === Render Mode ===

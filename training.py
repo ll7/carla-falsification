@@ -350,7 +350,7 @@ def validate_trys(p_kwargs):
     training_steps = p_kwargs["epochs"]
 
     ### Mean of more runs because huge variaty of results but what we really want is a high reward...
-    for i in range(2):
+    for i in range(3):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
 
         scores.append(training_test(training_steps, time_steps_per_training, save_name,
@@ -376,7 +376,7 @@ def opt_training(n_trials):
         }
     )
     study = optuna.load_study(
-        study_name="learning6", storage=storage
+        study_name="learning7", storage=storage
     )
     study.optimize(optuna_trial, n_trials=1000)
 
