@@ -1,0 +1,10 @@
+{
+    // See http://go.microsoft.com/fwlink/?LinkId=827846
+    // for the documentation about the extensions.json format
+    "recommendations": [
+      "foam.foam-vscode",
+      // "yzhang.markdown-all-in-one",
+      // "hancel.markdown-image",
+      // "yzane.markdown-pdf"
+    ]
+}
