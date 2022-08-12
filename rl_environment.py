@@ -45,9 +45,9 @@ class CustomEnv(gym.Env):
         # Example when using discrete actions:
 
         # === Gym Variables ===
-        high_action = np.array([1, 1, 5])
+        high_action = np.array([1, 1, 1])
         low_action = np.array([-1, -1, 0])
-        self.action_space = Box(low=-1, high=1, shape=(3,), dtype=np.float32)
+        self.action_space = Box(low=low_action, high=high_action, shape=(3,), dtype=np.float32)
 
         # high = np.array([-500] * obs_size)
         high = np.array([500, 500, 500, 500, 50, 50, 50, 50, 1, 1])
@@ -278,7 +278,6 @@ class CustomEnv(gym.Env):
 
         # Factor of Max wlaker speed (0 - 1)
         self.action3 = abs(float(round(action[2], 2)))
-
 
         action = np.array([action[0], action[1]])
         action_length = np.linalg.norm(action)
