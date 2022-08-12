@@ -1,5 +1,0 @@
-while true
-do 
-	../../CarlaUE4.sh
-	sleep 5
-done
