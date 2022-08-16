@@ -5,9 +5,6 @@ import glob
 import math
 import os
 import sys
-from typing import Tuple
-
-from setuptools.command.dist_info import dist_info
 
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -17,15 +14,12 @@ try:
 except IndexError:
     pass
 import carla
-import random
 import time
 from gym.spaces import Box
-import copy
 import gym
 from gym import spaces
 import numpy as np
-from stable_baselines3.common import env_checker
-import copy
+
 
 
 def get_round_values(list_float_values, decimal_places):
@@ -33,6 +27,37 @@ def get_round_values(list_float_values, decimal_places):
     for i in list_float_values:
         value.append(round(i, decimal_places))
     return value
+
+
+def norm_angle(angle_rad):
+    """Normalize the given angle within [-pi, +pi)"""
+    while angle_rad > math.pi:
+        angle_rad -= 2.0 * math.pi
+    while angle_rad < -math.pi:
+        angle_rad += 2.0 * math.pi
+    if angle_rad == math.pi:
+        angle_rad = -math.pi
+
+    if angle_rad < -math.pi or angle_rad >= math.pi:
+        print('norm angle failed! this should never happen')
+
+    return angle_rad
+
+
+def norm_angle_deg(deg_angle):
+    """Normalize the given angle within [-pi, +pi)"""
+    while deg_angle > 180:
+        deg_angle -= 360
+    while deg_angle < -180:
+        deg_angle += 360
+    if deg_angle == 180:
+        deg_angle = -180
+    return deg_angle
+
+
+def vector_len(vec):
+    """Compute the given vector's length"""
+    return math.sqrt(vec[0] ** 2 + vec[1] ** 2)
 
 
 class CustomEnv(gym.Env):
@@ -387,43 +412,15 @@ class CustomEnv(gym.Env):
         """Get the given vector's direction in radians within [-pi, pi)"""
         normed_vector = self.norm_vector(vector)
         angle = math.atan2(normed_vector[1], normed_vector[0])
-        return self.norm_angle(angle)
-
-    def norm_angle(self, angle_rad: float) -> float:
-        """Normalize the given angle within [-pi, +pi)"""
-        while angle_rad > math.pi:
-            angle_rad -= 2.0 * math.pi
-        while angle_rad < -math.pi:
-            angle_rad += 2.0 * math.pi
-        if angle_rad == math.pi:
-            angle_rad = -math.pi
-
-        if angle_rad < -math.pi or angle_rad >= math.pi:
-            print('norm angle failed! this should never happen')
-
-        return angle_rad
-
-    def norm_angle_deg(self, deg_angle: float) -> float:
-        """Normalize the given angle within [-pi, +pi)"""
-        while deg_angle > 180:
-            deg_angle -= 360
-        while deg_angle < -180:
-            deg_angle += 360
-        if deg_angle == 180:
-            deg_angle = -180
-        return deg_angle
+        return norm_angle(angle)
 
     def norm_vector(self, vector):
         """Normalize the given vector to a proportional vector of length 1"""
         return self.scale_vector(vector, 1.0)
 
-    def vector_len(self, vec):
-        """Compute the given vector's length"""
-        return math.sqrt(vec[0] ** 2 + vec[1] ** 2)
-
     def scale_vector(self, vector, new_len):
         """Amplify the length of the given vector"""
-        old_len = self.vector_len(vector)
+        old_len = vector_len(vector)
         if old_len == 0:
             return (0, 0)
         scaled_vector = (vector[0] * new_len / old_len,
