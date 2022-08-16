@@ -192,7 +192,7 @@ def linear_schedule(initial_value: float) -> Callable[[float], float]:
     return func
 
 def training_test(training_steps, time_steps_per_training,
-                  save_name, log_interall, learn_rate=0.0003, policy_kwargs=None, p_kwargs=None):
+                  save_name, log_interall, learn_rate=0.003, policy_kwargs=None, p_kwargs=None):
     print("args_p", p_kwargs)
     # env = CustomEnv(time_steps_per_training)
     tmp_path = "./tmp/optuna_tb_big_net_2/" + str(training_steps) + "/" + str(save_name)
@@ -202,17 +202,12 @@ def training_test(training_steps, time_steps_per_training,
     env.reset()
 
     cb = CustomCallback(time_steps_per_training)
-    from stable_baselines3.common.policies import ActorCriticPolicy
-    # def lr(x=0):
-    #     return learn_rate
-    # policy = ActorCriticPolicy(observation_space=env.observation_space, action_space=env.action_space, lr_schedule=lr)
     if policy_kwargs is None:
         policy_kwargs = dict(activation_fn=th.nn.ReLU,
                              net_arch=[dict(pi=[64, 64, 2048], vf=[64, 64, 2048])])
-    # policy_kwargs = None
     model = None
     if p_kwargs is None:
-        model = PPO("MlpPolicy", env, verbose=2, learning_rate=learn_rate, policy_kwargs=policy_kwargs)
+        model = PPO("MlpPolicy", env, verbose=2, learning_rate=linear_schedule(learn_rate), policy_kwargs=policy_kwargs)
     else:
         print("Creating Model")
         batch_size = p_kwargs["batch_size"]
@@ -226,20 +221,23 @@ def training_test(training_steps, time_steps_per_training,
         model = PPO("MlpPolicy",
                     env=env,
                     verbose=2,
-                    learning_rate=learn_rate,
+                    learning_rate=linear_schedule(learn_rate),
                     policy_kwargs=policy_kwargs,
                     batch_size=batch_size,
                     gamma=gamma,
                     gae_lambda=gae_lambda,
                     clip_range=clip_range,
                     ent_coef=ent_coef,
-                    vf_coef=vf_coef
+                    vf_coef=vf_coef,
+                    use_sde=True
                     )
     print(model.policy)
     model.set_logger(new_logger)
     model.learn(total_timesteps=int(training_steps * time_steps_per_training),
                 log_interval=log_interall,
-                callback=cb)
+                callback=cb
+                #,eval_freq= time_steps_per_training * 10
+                )
     model.save("./tmp/test_Model" + str(save_name))
     # env.close()
     print("End Learning")
@@ -260,9 +258,7 @@ def render_model(model, env, time_sleep=0.01):
 
 
 def create_policy_kwargs(layer, layersize, activation_fn):
-    if activation_fn == "Linear":
-        activation_fn = th.nn.Linear(10,3)
-    elif activation_fn == "ReLU":
+    if activation_fn == "ReLU":
         activation_fn = th.nn.ReLU
     elif activation_fn == "Sigmoid":
         activation_fn = th.nn.Sigmoid
@@ -336,7 +332,6 @@ def optuna_trial(trial):
     return validate_trys(args_p)
 
 
-
 def validate_trys(p_kwargs):
     scores = []
     learnrate = p_kwargs["learnrate"]
@@ -353,36 +348,24 @@ def validate_trys(p_kwargs):
     return (sum(scores) / len(scores) + max(scores)) / 2
 
 
-def opt_training(n_trials):
-    study = optuna.create_study(direction='maximize')
-    now = time.time()
-    save_name = "study"+str(round(now))+".pkl"
-    # save_name = "study1658613782.pkl"
-    # print("NEW STUDY: ", save_name)
-    # joblib.dump(study, save_name)
-    # study = optuna.create_study(storage=storage)
-
+def opt_training(n_trials, hostname, user, password, db_name):
+    url = 'mysql://' + user + ':' + password + '@' + hostname + '/' + db_name
+    # Connect to db
     storage = optuna.storages.RDBStorage(
-        url='mysql://test:123@137.250.121.31/optuna',
+        url=url,
         engine_kwargs={
             'pool_size': 20,
             'max_overflow': 0
         }
     )
-    study = optuna.load_study(
-        study_name="learning7", storage=storage
-    )
-    study.optimize(optuna_trial, n_trials=1000)
 
-    #
-    # for i in range(int(n_trials/2)):
-    #     study = joblib.load(save_name)
-    #     try:
-    #         study.optimize(optuna_trial, n_trials=3)
-    #         joblib.dump(study, save_name)
-    #         time.sleep(1)
-    #     except Exception as e:
-    #         print("Fail to optuna trials", e)
+    # Load Study from db
+    study = optuna.load_study(
+        study_name="learning8", storage=storage
+    )
+
+    # start to optimize study
+    study.optimize(optuna_trial, n_trials=n_trials)
 
 
 def manual_training():
@@ -415,6 +398,14 @@ if __name__ == '__main__':
     log_interall = 1
 
     env = CustomEnv(time_steps_per_training)
+
+    # For Visual training
     # env.render("human")
-    opt_training(n_trials=500)
-    # manual_training()
+
+    #DB-Data:
+    hostname = '137.250.121.31'
+    user = 'test'
+    password = '123'
+    db_name = 'optuna'
+    # Start Optuna Parameter Optimization
+    opt_training(n_trials=500, hostname=hostname, user=user, password=password, db_name=db_name)
