@@ -177,6 +177,13 @@ class CustomEnv(gym.Env):
         self._set_camara_view()
         self.world.tick()
 
+        # === For Reward plot ===
+        self.rewards = []
+        self.colision_track = []
+        self.drive_fast_near_walkers = []
+        self.check_emergency_braking_track = []
+        self.open_your_eyes_track = []
+        self.reward_distance_track = []
 
 
     def __spawn_walker(self):
@@ -262,8 +269,10 @@ class CustomEnv(gym.Env):
         a1 = math.degrees(self.vector_to_dir(unit_location))
         a2 = math.degrees(self.vector_to_dir(dir_vec))
 
-        if (self.norm_angle_deg(a1+90) > a2) or (self.norm_angle_deg(a1 - 90) < a2):
-            return -0.001
+        if norm_angle_deg(a1 + 90) > a2:
+            return -0.02 * (norm_angle_deg(a1 + 90)-a2)/90
+        if norm_angle_deg(a1 - 90) < a2:
+            return -0.02 * (a2 - norm_angle_deg(a1 - 90))/90
 
         return 0
 
@@ -271,14 +280,26 @@ class CustomEnv(gym.Env):
 
     def reward_calculation(self):
         # === Calculate Reward for RL-learning ===
-        reward_distance = (-math.dist(self.pos_walker, self.pos_car))/1000
+        reward_distance = max((-math.dist(self.pos_walker, self.pos_car))/1000, -0.05)
         coli = self.collisionReward
         self.collisionReward = 0
-        reward_every_time = coli + self.drive_fast_near_walker() +\
-                            self.check_emergency_braking() + self.open_your_eyes()
+        dfnw = self.drive_fast_near_walker()
+        ceb = self.check_emergency_braking()
+        pye = self.open_your_eyes()
+        reward_every_time = coli + dfnw + ceb + pye
+
+        self.reward_distance_track.append(reward_distance)
+        self.colision_track.append(coli)
+        self.drive_fast_near_walkers.append(dfnw)
+        self.check_emergency_braking_track.append(ceb)
+        self.open_your_eyes_track.append(pye)
+
         if self.reward_step % self.reward_steps_max == 0:
+            self.rewards.append(reward_every_time + reward_distance)
             return reward_every_time + reward_distance
+        self.rewards.append(reward_every_time)
         return reward_every_time
+
 
     def render(self, mode="human"):
         # === Render Mode ===
@@ -384,6 +405,12 @@ class CustomEnv(gym.Env):
         self.old_vel = 10
         self.action3 = 1
         self.info = {"actions":[]}
+        self.rewards = []
+        self.colision_track = []
+        self.drive_fast_near_walkers = []
+        self.check_emergency_braking_track = []
+        self.open_your_eyes_track = []
+        self.reward_distance_track = []
         try:
             self.reset_walker()
         except:
