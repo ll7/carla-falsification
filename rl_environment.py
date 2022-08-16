@@ -207,9 +207,9 @@ class CustomEnv(gym.Env):
         spectator = self.world.get_spectator()
 
         location = self.spawn_points[0].location
-        # location = carla.Location(x=143.119980, y=326.970001, z=0.300000)
+        location = carla.Location(x=147.119980, y=326.970001, z=0.300000)
         transform = carla.Transform(location, self.spawn_points[0].rotation)
-        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=70),
+        spectator.set_transform(carla.Transform(transform.location + carla.Location(z=80),
                                                 carla.Rotation(pitch=-90)))
 
     def __spawn_car(self):
