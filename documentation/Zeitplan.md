@@ -78,6 +78,12 @@
 - Doku installation + optuna + schicken
 - Issue Github Determinism
 
+### KW 33 
+- Visualisierung Rewards
+- Einfache Implementierung zum testen 
+- Bestandteile Reward im Info Feld
+- Rewarddesign
+- Einleitung Abschlusspraesentation
 
 ### KW 36 
 - Anmeldung Masterarbeit!
