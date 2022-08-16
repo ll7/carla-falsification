@@ -281,7 +281,7 @@ class CustomEnv(gym.Env):
 
     def reward_calculation(self):
         # === Calculate Reward for RL-learning ===
-        reward_distance = max((-math.dist(self.pos_walker, self.pos_car))/1000, -0.05)
+        reward_distance = (-math.dist(self.pos_walker, self.pos_car))/1000
         coli = self.collisionReward
         self.collisionReward = 0
         dfnw = self.drive_fast_near_walker()
