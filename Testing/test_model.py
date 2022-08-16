@@ -5,17 +5,18 @@ from stable_baselines3 import PPO
 
 sys.path.append(".")
 
-def test_Results(ticks, save_path):
+def test_Results(ticks, save_path, rendMode="humanSync"):
     env = CustomEnv(ticks)
     model = PPO.load(save_path, env=env)
     obs = env.reset()
-    env.render(mode="human")
+    env.render(mode=rendMode)
     action1 = []
     auswertung = []
     rewards = 0
     for i in range(10):
         for i2 in range(env.max_tick_count):
             action, _states = model.predict(obs, deterministic=True)
+            # action, _states = model.predict(obs)
             if i == 0:
                 action1.append(action)
             else:
@@ -46,5 +47,5 @@ if __name__ == '__main__':
 
     ticks_max = 512
     folder = "../tmp/"
-    save_name = folder + "test_Model0.004501340821680491_726_0"
+    save_name = folder + "test_Model0.001_50_0"
     test_Results(ticks_max, save_name)
