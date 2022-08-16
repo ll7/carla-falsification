@@ -1,8 +1,10 @@
 import sys
 import time
-from rl_environment import CustomEnv
-
 sys.path.append(".")
+sys.path.append("/home/imech031/Desktop/carla-simulator/PythonAPI/carla-falsification")
+from rl_environment import CustomEnv
+import matplotlib.pyplot as plt
+
 
 
 def load_action(action_file):
@@ -15,7 +17,7 @@ def load_action(action_file):
     return array
 
 
-def test_actions(ticks, action_file, mode="human"):
+def test_actions(ticks, action_file, mode="human", plot=True):
     actions = load_action(action_file)
     print(actions)
     env = CustomEnv(ticks)
@@ -36,14 +38,22 @@ def test_actions(ticks, action_file, mode="human"):
             if i == 0:
                 action[2] = action[2]/5
             obs, reward, done, info = env.step(action)
+            if plot:
+                rewards_list = env.rewards
+                plt.cla()
+                plt.plot(range(len(rewards_list)), rewards_list, label='whole')
+                plt.plot(range(len(rewards_list)), env.open_your_eyes_track, label='angle')
+                plt.plot(range(len(rewards_list)), env.reward_distance_track, label='dist')
+                plt.legend()
+                plt.pause(0.1)
             rewards += reward
-            # time.sleep(0.01)
+            # time.sleep(0.045)
             if done:
                 print(rewards)
                 auswertung.append(rewards)
                 rewards = 0
                 env.reset()
-                time.sleep(0.5)
+                time.sleep(3)
                 break
     # print(action1)
     env.close()
@@ -52,6 +62,11 @@ def test_actions(ticks, action_file, mode="human"):
 if __name__ == '__main__':
     # Modes: humanSync, human
     ticks_max = 512
-    action_file = "../tmp/Actions-7.357062"
-    # test_actions(ticks, action_file, "humanSync")
-    test_actions(ticks_max, action_file, "human")
+    action_file = "../tmp/Actions-2.3253"
+    action_file = "../tmp/Actions-8.075186"
+
+    plt.show()
+
+    test_actions(ticks_max, action_file, "humanSync", plot=True)
+
+    # test_actions(ticks_max, action_file, "human", plot=False)
