@@ -85,6 +85,12 @@
 - Rewarddesign
 - Einleitung Abschlusspraesentation
 
+### WK 34 + 
+- Dokumentation 
+- Präsentation
+- Paper lesen 
+- Freies Arbeiten 
+
 ### KW 36 
 - Anmeldung Masterarbeit!
 
