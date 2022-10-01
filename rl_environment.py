@@ -21,13 +21,11 @@ from gym import spaces
 import numpy as np
 
 
-
 def get_round_values(list_float_values, decimal_places):
     value = []
     for i in list_float_values:
         value.append(round(i, decimal_places))
     return value
-
 
 def norm_angle(angle_rad):
     """Normalize the given angle within [-pi, +pi)"""
@@ -188,7 +186,7 @@ class CustomEnv(gym.Env):
 
 
     def __spawn_walker(self):
-        # === Load Blueprint and spawn walker ===
+        """ Load Blueprint and spawn walker """
         walker_bp = self.blueprint_library.filter('0012')[0]
         walker_spawn_transform = self.spawn_points[0]
         walker = self.world.spawn_actor(walker_bp, walker_spawn_transform)
@@ -203,7 +201,7 @@ class CustomEnv(gym.Env):
         return walker, collision_sensor_walker
 
     def _set_camara_view(self):
-        # === Walker View Camera ===
+        """ Walker View Camera === """
         spectator = self.world.get_spectator()
 
         location = self.spawn_points[0].location
@@ -213,6 +211,7 @@ class CustomEnv(gym.Env):
                                                 carla.Rotation(pitch=-90)))
 
     def __spawn_car(self):
+        """ Spawn Car on a given position and activate autopilot"""
         tm_port = self.set_tm_seed()
 
         car_bp = self.blueprint_library.filter('vehicle.tesla.model3')[0]
@@ -233,7 +232,7 @@ class CustomEnv(gym.Env):
         return car, collision_sensor_car
 
     def draw_waypoint(self, location, index, life_time=120.0):
-
+        """ Draw waypoints on a gien position"""
         self.world.debug.draw_string(location, str(index), draw_shadow=False,
                                      color=carla.Color(r=255, g=0, b=0), life_time=life_time,
                                      persistent_lines=True)

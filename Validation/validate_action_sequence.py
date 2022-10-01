@@ -6,7 +6,7 @@ from rl_environment import CustomEnv
 import matplotlib.pyplot as plt
 
 
-
+""" Open file and read line after line and return it as an array"""
 def load_action(action_file):
     import ast
     file1 = open(action_file, 'r')
@@ -16,7 +16,7 @@ def load_action(action_file):
         array.append(ast.literal_eval(line.strip()))
     return array
 
-
+""" Test loaded action and plot reward"""
 def test_actions(ticks, action_file, mode="human", plot=True):
     actions = load_action(action_file)
     print(actions)
@@ -61,8 +61,8 @@ def test_actions(ticks, action_file, mode="human", plot=True):
 
 if __name__ == '__main__':
     # Modes: humanSync, human
+    """ humanSync set Synchronos mode in Carla to true otherwise wo false """
     ticks_max = 512
-    action_file = "../tmp/Actions-2.3253"
     action_file = "../tmp/Actions-8.075186"
 
     plt.show()

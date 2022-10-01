@@ -5,6 +5,7 @@ from stable_baselines3 import PPO
 
 sys.path.append(".")
 
+""" Load Model from path and render it"""
 def test_Results(ticks, save_path, rendMode="humanSync"):
     env = CustomEnv(ticks)
     model = PPO.load(save_path, env=env)
@@ -33,6 +34,7 @@ def test_Results(ticks, save_path, rendMode="humanSync"):
     # print(action1)
     env.close()
 
+    # For some advanced statistics
     import statistics
     mean = statistics.mean(auswertung)
     max_v = max(auswertung)

@@ -67,9 +67,25 @@ For Evaluation you can load the trained study und visualise it. For example you 
     plot = plot_optimization_history(study)
     plot.show()
 
-Some visualisation examples from my project can be faound here: https://github.com/ll7/carla-falsification/blob/master/printOptunaStudies.py
+### Examples in my project
+Create Study on a DB:
 
-Source: 
+https://github.com/ll7/carla-falsification/blob/master/optuna/create_optuna_study.py
+
+
+Exampe for Training can found in the function "opt_training": 
+
+https://github.com/ll7/carla-falsification/blob/master/training.py
+
+
+Some visualisation examples from my project can be faound here:
+
+https://github.com/ll7/carla-falsification/blob/master/optuna/printOptunaStudies.py
+
+
+
+
+### Source: 
 
 https://optuna.readthedocs.io/en/stable/index.html
 
