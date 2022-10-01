@@ -2,7 +2,7 @@
 
 ### KW 13-14:
 - Einlesen in Basics von RL 
-- Abklaerung Thema 
+- Abklärung Thema 
 - Training erster Modelle 
 - Einrichtung Programme 
 
@@ -16,11 +16,11 @@
 - Implementierung RL mit distance Auto - Person 
 
 ### KW 19-20:
-- Erweiterung von Modellen und ueberlegung Erweiterung Action/ obs space 
-- Sinnvoller Kollisionsreward finden
+- Erweiterung von Modellen und überlegung Erweiterung Action/ obs space 
+- Sinnvoller Kollision-Reward finden
 
 ### KW 21-22:
-- RTX 3080TI zum laufen bringen
+- RTX 3080TI zum Laufen bringen
 
 
 ### KW 23
@@ -32,7 +32,7 @@
 
 
 ### KW 24
-- Initialisisung high low/ Eigenschaften Box Bounds 
+- Initialisierung high low/ Eigenschaften Box Bounds 
 - Action Sequenz speichern
 - Dokumentation 
 
@@ -45,25 +45,25 @@
 - Add Force/ set_target_velocity
 - Async Mode testen
 - Ergebnisse Determinismus zusammenschreiben
-- Eigentschaften Model betrachten
+- Eigenschaften Model betrachten
 - 
 
 ### KW 28-29
 - Optuna mit mehr parametern
 - Zurück zum Eigentlichen Problem ... -> Klassifizierung finden und situation bewerten
 - Größeres Model?! 
-- Problem mit Envirionment Crash behoben 
+- Problem mit Environment Crash behoben 
 - Sehr viel Training 
 
 
 ### KW 30 
-- Optuna multirechner setup 
+- Optuna Multi-Rechner setup 
 - parameterraum vergrößern
 - erste Auswertung was gute Parameter sein können  
 - überlegung wie schnell soll fahrzeug sein -> 30kmh zum start
 
 ### KW 31 
-- Rewardfunktion (nicht richtung Auto schauen)
+- Reward-Funktion (nicht richtung Auto schauen)
 - Startposition Gehweg
 - Action Space erweitern (v walker)
 - Observation Space (Orientation Walker) 
@@ -74,16 +74,16 @@
 <hr>
 
 ### KW 32 
-- Rewardfunktion anpassen 
+- Reward-Funktion anpassen 
 - Doku installation + optuna + schicken
 - Issue Github Determinism
 
 ### KW 33 
 - Visualisierung Rewards
-- Einfache Implementierung zum testen 
+- Einfache Implementierung zum Testen 
 - Bestandteile Reward im Info Feld
-- Rewarddesign
-- Einleitung Abschlusspraesentation
+- Reward-Design
+- Einleitung Abschlusspräsentation
 
 ### WK 34 + 
 - Dokumentation 
@@ -91,9 +91,3 @@
 - Paper lesen 
 - Freies Arbeiten 
 
-### KW 36 
-- Anmeldung Masterarbeit!
-
-### ToDo 
-- Abschlusspräsentation erstellen
-- Doku

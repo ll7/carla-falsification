@@ -17,4 +17,4 @@ My suggestion is to write some basic test coverage and think from time to time w
 In my case an early test for the determinism of the walker would have me saved many hours of debugging. 
 
 ### Use of variables
-
+Try to use variables as local as possible and try to name it proper. This helps to identify the scope of the variable and are good against confusion of variables.  

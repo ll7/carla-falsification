@@ -14,9 +14,6 @@ Optuna is an automatic hyperparameter optimization software framework, particula
 - Quick visualization
 
 
-
-
-
 ## Setup a multicomputer setup 
 
 First you need to install optuna for python
@@ -70,7 +67,7 @@ For Evaluation you can load the trained study und visualise it. For example you 
     plot = plot_optimization_history(study)
     plot.show()
 
-
+Some visualisation examples from my project can be faound here: https://github.com/ll7/carla-falsification/blob/master/printOptunaStudies.py
 
 Source: 
 
