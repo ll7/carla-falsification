@@ -78,7 +78,7 @@ class CustomEnv(gym.Env):
         # pos_car(x,y) + pos_walker(x,y) + vel_walker(x,y) + vel_car(x,y) + dir_vec
         high = np.array([400, 360, 400, 360, 15, 15, 30, 30, 1, 1])
         # low = np.array([500] * obs_size)
-        low = np.array([100, 250, 100, 250, -15, -15, -30, -30, -1, -1])
+        low = np.array([100, 250, 100, 250, 0, 0, -30, -30, -1, -1])
         obs_size = len(high)
         self.observation_space = spaces.Box(low=low, high=high,
                                             shape=(obs_size,), dtype=np.float32)
@@ -324,8 +324,7 @@ class CustomEnv(gym.Env):
         # === Let the walker do a move ===
 
         # Factor of Max wlaker speed (0 - 1)
-        self.action3 = abs(float(round(action[2], 2)))
-
+        self.action3 = action[2]
         action = np.array([action[0], action[1]])
         action_length = np.linalg.norm(action)
         if action_length == 0.0:
