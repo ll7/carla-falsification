@@ -282,6 +282,7 @@ def create_policy_kwargs(layer, layersize, activation_fn):
 
 
 def optuna_trial(trial):
+    """Trial for Optuna with all variables"""
     print("Start Trail")
     layers = trial.suggest_categorical('layers', [2, 3, 4])
 
@@ -333,13 +334,14 @@ def optuna_trial(trial):
 
 
 def validate_trys(p_kwargs):
+    """Cause one trial is not significant more runs for one evaluation is needed"""
     scores = []
     learnrate = p_kwargs["learnrate"]
     policy_kwargs = p_kwargs["policy_kwargs"]
     training_steps = p_kwargs["epochs"]
 
     ### Mean of more runs because huge variaty of results but what we really want is a high reward...
-    for i in range(3):
+    for i in range(5):
         save_name = str(learnrate) + "_" + str(training_steps) + "_" + str(i)
 
         scores.append(training_test(training_steps, time_steps_per_training, save_name,
@@ -349,6 +351,7 @@ def validate_trys(p_kwargs):
 
 
 def opt_training(n_trials, hostname, user, password, db_name):
+    """ Connect to bd and optimize it"""
     url = 'mysql://' + user + ':' + password + '@' + hostname + '/' + db_name
     # Connect to db
     storage = optuna.storages.RDBStorage(
@@ -369,6 +372,7 @@ def opt_training(n_trials, hostname, user, password, db_name):
 
 
 def manual_training():
+    """Train with fixed values"""
     args_p = {
         "learnrate": 0.001,
         "epochs": 10,

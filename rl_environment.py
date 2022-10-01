@@ -238,6 +238,7 @@ class CustomEnv(gym.Env):
                                      persistent_lines=True)
 
     def drive_fast_near_walker(self):
+        """ Reward if the car drives near the walker"""
         v_car = self.car.get_velocity()
         v_ms = math.sqrt(v_car.x * v_car.x + v_car.y * v_car.y + v_car.z * v_car.z)
         if v_ms > 10 and math.dist(self.pos_walker, self.pos_car) < 3:
@@ -246,6 +247,7 @@ class CustomEnv(gym.Env):
         return 0
 
     def check_emergency_braking(self):
+        """ if the velocity change to fast -> Reward"""
         v_car = self.car.get_velocity()
         v_ms = math.sqrt(v_car.x * v_car.x + v_car.y * v_car.y + v_car.z * v_car.z)
         # Set old vel every secound
@@ -258,6 +260,7 @@ class CustomEnv(gym.Env):
         return 0
 
     def open_your_eyes(self):
+        """ Punishment if the walker can see the car """
         # Ignore direction if the car is far away
         # if math.dist(self.pos_walker, self.pos_car) > 50:
         #     return 0
@@ -279,6 +282,7 @@ class CustomEnv(gym.Env):
 
 
     def reward_calculation(self):
+        """ Calculate the whole reward"""
         # === Calculate Reward for RL-learning ===
         reward_distance = (-math.dist(self.pos_walker, self.pos_car))/1000
         coli = self.collisionReward
@@ -302,6 +306,7 @@ class CustomEnv(gym.Env):
 
 
     def render(self, mode="human"):
+        """ Set Render Mode in Carla"""
         # === Render Mode ===
         if mode == "human":
             settings = self.world.get_settings()
@@ -320,7 +325,7 @@ class CustomEnv(gym.Env):
             self.world.apply_settings(settings)
 
     def step(self, action):
-        # === Let the walker do a move ===
+        """ Let the walker do a move/ step """
 
         # Factor of Max wlaker speed (0 - 1)
         self.action3 = action[2]
@@ -361,6 +366,7 @@ class CustomEnv(gym.Env):
         return self.get_obs(), self.reward_calculation(), self.done, self.info
 
     def set_tm_seed(self):
+        """ Set the seed of traffic manger"""
         # === Set Seed for TrafficManager ===
         seed_value = 0
         tm = self.client.get_trafficmanager(8000)
@@ -369,7 +375,7 @@ class CustomEnv(gym.Env):
         return tm_port
 
     def collision_handler(self, event):
-        # === handle collisions and calculate extra reward ===
+        """ handle collisions and calculate extra reward """
         actor_we_collide_against = event.other_actor
         impulse = event.normal_impulse
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
@@ -396,6 +402,7 @@ class CustomEnv(gym.Env):
             print("Car Collition with whatever:", self.collisionReward)
 
     def reset(self):
+        """ Reset all values """
         self.tick_count = 0
         self.reward = 0
         self.collisionReward = 0
@@ -422,6 +429,7 @@ class CustomEnv(gym.Env):
         return self.get_obs()
 
     def get_obs(self):
+        """ Combine obbervations and return it"""
         get_vel = self.walker.get_velocity()
         vel_walker = [get_vel.x, get_vel.y]
 
@@ -460,6 +468,7 @@ class CustomEnv(gym.Env):
         self.collision_sensor_walker.destroy()
         self.walker.destroy()
         self.walker, self.collision_sensor_walker = self.__spawn_walker()
+
     def reset_car(self):
         tm_port = self.set_tm_seed()
         self.car.set_autopilot(False, tm_port)
@@ -468,6 +477,7 @@ class CustomEnv(gym.Env):
         self.car, self.collision_sensor_car = self.__spawn_car()
 
     def close(self):
+        """Close environment"""
         self.client = carla.Client(self.host, 2000)
         self.client.set_timeout(60.0)
 
