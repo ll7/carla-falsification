@@ -21,12 +21,6 @@ from gym import spaces
 import numpy as np
 
 
-def get_round_values(list_float_values, decimal_places):
-    value = []
-    for i in list_float_values:
-        value.append(round(i, decimal_places))
-    return value
-
 def norm_angle(angle_rad):
     """Normalize the given angle within [-pi, +pi)"""
     while angle_rad > math.pi:
@@ -68,15 +62,30 @@ class CustomEnv(gym.Env):
         # Example when using discrete actions:
 
         # === Gym Variables ===
-        high_action = np.array([1, 1, 1])
-        low_action = np.array([-1, -1, 0])
+
+        high_action = np.array([
+            1, 1,  # direction vector (x/y)
+            1  # speed from 0 to 100%
+        ])
+        low_action = np.array([
+            -1, -1,  # dir_vec (x/y)
+            1  # speed from 0 to 100%
+        ])
         self.action_space = Box(low=low_action, high=high_action, shape=(3,), dtype=np.float32)
 
-        # high = np.array([-500] * obs_size)
-        # pos_car(x,y) + pos_walker(x,y) + vel_walker(x,y) + vel_car(x,y) + dir_vec
-        high = np.array([400, 360, 400, 360, 15, 15, 30, 30, 1, 1])
-        # low = np.array([500] * obs_size)
-        low = np.array([100, 250, 100, 250, 0, 0, -30, -30, -1, -1])
+        high = np.array([
+            400, 360,  # pos_car(x,y)
+            400, 360,  # pos_walker(x,y)
+            15, 15,  # vel_walker(x,y)
+            30, 30,  # vel_car(x,y)
+            1, 1])  # direction vector (x/y)
+        low = np.array([
+            100, 250,  # pos_car(x,y)
+            100, 250,  # pos_walker(x,y)
+            0, 0,  # vel_walker(x,y)
+            -30, -30,  # vel_car(x,y)
+            -1, -1  # direction vector (x/y)
+        ])
         obs_size = len(high)
         self.observation_space = spaces.Box(low=low, high=high,
                                             shape=(obs_size,), dtype=np.float32)
@@ -85,20 +94,20 @@ class CustomEnv(gym.Env):
         self.reward = 0
         self.tick_count = 0
         self.max_tick_count = time_steps_per_training
-        self.ticks_near_car = 0
-        self.old_vel = 10
-        self.reward_steps_max = 5
-        self.reward_step = 0
+
+        # Get every sec the velocity to check if an emergency braking happened
+        self.velocity_last_sec = 10
+
         # === Carla ===
         self.host = 'localhost'
         self.town = 'Town01'
 
-        self.client = carla.Client(self.host, 2000)
+        self.client = carla.Client(self.host, 2000)  # The Client connects CARLA to the server which runs the simulation
         self.client.set_timeout(20.0)
-        self.world = self.client.get_world()
-        self.blueprint_library = self.world.get_blueprint_library()
-        self.actor_list = []
-        self.action3 = 1
+        self.world = self.client.get_world()  # returns the world object currently active in the simulation
+        self.blueprint_library = self.world.get_blueprint_library()  # Returns a list of actor blueprints available to
+        # ease the spawn of these into the world.
+        self.actor_list = [] # List of all actors
         # === set correct map ===
         self.map = self.world.get_map()
         if not self.map.name.endswith(self.town):
@@ -140,7 +149,6 @@ class CustomEnv(gym.Env):
         # self.traffic_manager.set_synchronous_mode(True)
         self.traffic_manager.set_random_device_seed(0)  # define TM seed for determinism
 
-
         # === Spawn Points ===
         # 1. Spawn Point for Walker, 2. for Car
         self.spawn_points = []
@@ -152,7 +160,7 @@ class CustomEnv(gym.Env):
         self.spawn_points.append(transform_car_default)
 
         # === walker ===
-        self.max_walking_speed = 5   # 18/3,6 m/s
+        self.max_walking_speed = 5  # 18/3,6 m/s
         self.pos_walker_default = [self.spawn_points[0].location.x, self.spawn_points[0].location.y]
         self.pos_walker = self.pos_walker_default
         self.walker, self.collision_sensor_walker = self.__spawn_walker()
@@ -183,7 +191,6 @@ class CustomEnv(gym.Env):
         self.check_emergency_braking_track = []
         self.open_your_eyes_track = []
         self.reward_distance_track = []
-
 
     def __spawn_walker(self):
         """ Load Blueprint and spawn walker """
@@ -222,7 +229,6 @@ class CustomEnv(gym.Env):
         velocity = carla.Vector3D(x=8, y=0, z=0)
         car.set_target_velocity(velocity)
 
-
         car.set_autopilot(True, tm_port)
 
         collision_sensor_car = self.world.spawn_actor(
@@ -252,9 +258,9 @@ class CustomEnv(gym.Env):
         v_ms = math.sqrt(v_car.x * v_car.x + v_car.y * v_car.y + v_car.z * v_car.z)
         # Set old vel every secound
         if not self.tick_count % 20:
-            self.old_vel = v_ms
+            self.velocity_last_sec = v_ms
         # TODO better formular then 80% loss of vel in 1 sec
-        if self.old_vel > 8 and self.old_vel*0.2 > v_ms:
+        if self.velocity_last_sec > 8 and self.velocity_last_sec * 0.2 > v_ms:
             print("emergency_braking")
             return 0.1
         return 0
@@ -273,18 +279,16 @@ class CustomEnv(gym.Env):
         a2 = math.degrees(self.vector_to_dir(dir_vec))
 
         if norm_angle_deg(a1 + 90) > a2:
-            return -0.02 * (norm_angle_deg(a1 + 90)-a2)/90
+            return -0.02 * (norm_angle_deg(a1 + 90) - a2) / 90
         if norm_angle_deg(a1 - 90) < a2:
-            return -0.02 * (a2 - norm_angle_deg(a1 - 90))/90
+            return -0.02 * (a2 - norm_angle_deg(a1 - 90)) / 90
 
         return 0
-
-
 
     def reward_calculation(self):
         """ Calculate the whole reward"""
         # === Calculate Reward for RL-learning ===
-        reward_distance = (-math.dist(self.pos_walker, self.pos_car))/1000
+        reward_distance = (-math.dist(self.pos_walker, self.pos_car)) / 1000
         coli = self.collisionReward
         self.collisionReward = 0
         dfnw = self.drive_fast_near_walker()
@@ -292,18 +296,15 @@ class CustomEnv(gym.Env):
         pye = self.open_your_eyes()
         reward_every_time = coli + dfnw + ceb + pye
 
+        # For visualisation save all the previous rewards
         self.reward_distance_track.append(reward_distance)
         self.colision_track.append(coli)
         self.drive_fast_near_walkers.append(dfnw)
         self.check_emergency_braking_track.append(ceb)
         self.open_your_eyes_track.append(pye)
-
-        if self.reward_step % self.reward_steps_max == 0:
-            self.rewards.append(reward_every_time + reward_distance)
-            return reward_every_time + reward_distance
         self.rewards.append(reward_every_time)
-        return reward_every_time
 
+        return reward_every_time
 
     def render(self, mode="human"):
         """ Set Render Mode in Carla"""
@@ -328,7 +329,7 @@ class CustomEnv(gym.Env):
         """ Let the walker do a move/ step """
 
         # Factor of Max wlaker speed (0 - 1)
-        self.action3 = action[2]
+        walker_speed_action = action[2]
         action = np.array([action[0], action[1]])
         action_length = np.linalg.norm(action)
         if action_length == 0.0:
@@ -345,7 +346,7 @@ class CustomEnv(gym.Env):
         #           self.walker.get_angular_velocity(), self.walker.get_acceleration(), action_length)
 
         direction = carla.Vector3D(x=float(unit_action[0]), y=float(unit_action[1]), z=0.0)
-        walker_speed = self.action3 * self.max_walking_speed
+        walker_speed = walker_speed_action * self.max_walking_speed
         walker_control = carla.WalkerControl(
             direction, speed=walker_speed, jump=False)
         unit_action = np.append(unit_action, [walker_speed])
@@ -381,7 +382,7 @@ class CustomEnv(gym.Env):
         intensity = math.sqrt(impulse.x ** 2 + impulse.y ** 2 + impulse.z ** 2)
         # To ensure that the initial force does not count as collision
         if self.tick_count > 80:
-            self.collisionReward = min(abs(intensity)*100 + 0.1, 100)
+            self.collisionReward = min(abs(intensity) * 100 + 0.1, 100)
         else:
             self.collisionReward = 0
 
@@ -391,7 +392,7 @@ class CustomEnv(gym.Env):
             v_ms = math.sqrt(v_car.x * v_car.x + v_car.y * v_car.y + v_car.z * v_car.z)
 
             if v_ms > 1:
-                self.collisionReward = self.collisionReward + v_ms/10
+                self.collisionReward = self.collisionReward + v_ms / 10
                 print("Car has velocity of: ", v_ms)
             self.done = True
             if intensity > 0:
@@ -406,11 +407,9 @@ class CustomEnv(gym.Env):
         self.tick_count = 0
         self.reward = 0
         self.collisionReward = 0
-        self.ticks_near_car = 0
         self.done = False
-        self.old_vel = 10
-        self.action3 = 1
-        self.info = {"actions":[]}
+        self.velocity_last_sec = 10
+        self.info = {"actions": []}
         self.rewards = []
         self.colision_track = []
         self.drive_fast_near_walkers = []
@@ -460,7 +459,6 @@ class CustomEnv(gym.Env):
         scaled_vector = (vector[0] * new_len / old_len,
                          vector[1] * new_len / old_len)
         return scaled_vector
-
 
     def reset_walker(self):
         self.pos_car = self.pos_car_default

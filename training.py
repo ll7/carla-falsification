@@ -371,32 +371,6 @@ def opt_training(n_trials, hostname, user, password, db_name):
     study.optimize(optuna_trial, n_trials=n_trials)
 
 
-def manual_training():
-    """Train with fixed values"""
-    args_p = {
-        "learnrate": 0.001,
-        "epochs": 10,
-        "batch_size": 10,
-        "n_epochs": 10,
-        "gamma": 0.99,
-        "gae_lambda": 0.1,
-        "clip_range": 0,
-        "ent_coef": 0,
-        "vf_coef": 0,
-        "policy_kwargs": 0
-    }
-    learnrate = args_p["learnrate"]
-    policy_kwargs = args_p["policy_kwargs"]
-    training_steps = args_p["epochs"]
-
-    init_learnrates = [0.00015, 0.0003, 0.0006]
-    for i2 in range(2):
-        for i in range(len(init_learnrates)):
-            save_name = str(init_learnrates[i]) + "_" + str(training_steps) + "_" + str(i2)
-            training_test(training_steps, time_steps_per_training, save_name,
-                          log_interall, learnrate, policy_kwargs, None)
-
-
 if __name__ == '__main__':
     time_steps_per_training = 512
     log_interall = 1
@@ -404,12 +378,15 @@ if __name__ == '__main__':
     env = CustomEnv(time_steps_per_training)
 
     # For Visual training
-    # env.render("human")
+    env.render("human")
 
     #DB-Data:
     hostname = '137.250.121.31'
     user = 'test'
     password = '123'
     db_name = 'optuna'
+
+    #Number of trials to train environment
+    n_trials = 500
     # Start Optuna Parameter Optimization
-    opt_training(n_trials=500, hostname=hostname, user=user, password=password, db_name=db_name)
+    opt_training(n_trials=n_trials, hostname=hostname, user=user, password=password, db_name=db_name)

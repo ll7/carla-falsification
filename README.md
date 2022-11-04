@@ -115,19 +115,41 @@ For the visualizion and for param optimization you need to install the following
   <summary>Deitails Training</summary>
   
   
-For starting a training you need to clone Repo first, install all dependancies (From above) and then you can start carla and afterwards the Training. For performance reasons rendering is deactivated by default. If you want to see what the agent is doing uncomment the line "# env.render("human")" in the main of training.py
+For starting a training you need to clone Repo first, install all dependencies (From above) and then you can start carla
+and afterwards the Training. For performance reasons rendering is deactivated by default. 
+If you want to see what the agent is doing uncomment the line "# env.render("human")" in the main of training.py. 
+Before you can start the training it is necessary to configurate all parameter in the main (host, user, password, 
+db_name, n_trials)
 
-Start Carla: 
+#### Start Carla: 
     
     cd /opt/carla-simulator
     ./CarlaUE4.sh
     
-Start Training: 
+#### Start Training: 
 
-    cd /home
-    git@github.com:ll7/carla-falsification.git
     cd ./carla-falsification/
     python3 training.py >> log.txt
+
+#### What happened in the background?
+
+On each computer where you start the training, a rl controlled agent and a traffic manager 
+controlled car is spawned into the carla environment. With rl the agent tries to get better results. Cause in rl there 
+are many parameters to optimize Optuna is used to optimize the Parameters.  
+
+#### Structure of the CustomEnv (rl_envirionment) the basics
+
+init: connect to Carla, load map, initialize class variables, set Spawn Points, set Camera, apply settings, ...
+
+step: simulate one step in Carla with the given actions, and calculate a reward
+
+reward_calculation: function for the reward calculation, it considers different critical situations 
+
+render: render the env
+
+reset: reset the env after the training
+
+close: closes the env and the the connection to Carla
 
 </details>
 
