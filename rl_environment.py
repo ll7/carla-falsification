@@ -42,7 +42,7 @@ def vector_len(vec):
 class CustomEnv(gym.Env):
     """Custom Environment that follows gym interface"""
 
-    def __init__(self, time_steps_per_training):
+    def __init__(self, time_steps_per_training=512):
         super(CustomEnv, self).__init__()
         # Define action and observation space
         # They must be gym.spaces objects
