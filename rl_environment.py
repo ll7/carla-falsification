@@ -63,15 +63,16 @@ class CustomEnv(gym.Env):
         high = np.array([
             400, 360,  # pos_car(x,y)
             400, 360,  # pos_walker(x,y)
-            15, 15,  # vel_walker(x,y)
-            30, 30,  # vel_car(x,y)
-            1, 1])  # direction vector (x/y)
+            15, 15,    # vel_walker(x,y)
+            30, 30,    # vel_car(x,y)
+            1, 1       # direction vector walker (x, y)
+        ])
         low = np.array([
             100, 250,  # pos_car(x,y)
             100, 250,  # pos_walker(x,y)
-            0, 0,  # vel_walker(x,y)
+            0, 0,      # vel_walker(x,y)
             -30, -30,  # vel_car(x,y)
-            -1, -1  # direction vector (x/y)
+            -1, -1     # direction vector walker (x, y)
         ])
         obs_size = len(high)
         self.observation_space = spaces.Box(low=low, high=high,
