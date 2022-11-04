@@ -23,29 +23,16 @@ import numpy as np
 
 def norm_angle(angle_rad):
     """Normalize the given angle within [-pi, +pi)"""
-    while angle_rad > math.pi:
-        angle_rad -= 2.0 * math.pi
-    while angle_rad < -math.pi:
-        angle_rad += 2.0 * math.pi
-    if angle_rad == math.pi:
-        angle_rad = -math.pi
-
-    if angle_rad < -math.pi or angle_rad >= math.pi:
-        print('norm angle failed! this should never happen')
-
-    return angle_rad
+    if angle_rad > 0:
+        return angle_rad % math.pi
+    return - abs(angle_rad) % math.pi
 
 
 def norm_angle_deg(deg_angle):
     """Normalize the given angle within [-pi, +pi)"""
-    while deg_angle > 180:
-        deg_angle -= 360
-    while deg_angle < -180:
-        deg_angle += 360
-    if deg_angle == 180:
-        deg_angle = -180
-    return deg_angle
-
+    if deg_angle > 0:
+        return deg_angle % 360
+    return - abs(deg_angle) % 360
 
 def vector_len(vec):
     """Compute the given vector's length"""
