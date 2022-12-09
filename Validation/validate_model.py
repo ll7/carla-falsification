@@ -1,3 +1,13 @@
+"""
+The `validate_model.py` script is a utility script for evaluating the performance 
+of a trained reinforcement learning model. It loads the trained model from a specified 
+file path, creates an instance of the `CustomEnv` class, and then uses the model to 
+make predictions on the environment. The script can also render the environment in 
+either "humanSync" or "human" mode, allowing the user to see the model's performance 
+in real-time. Additionally, the script computes and prints some advanced statistics 
+on the model's performance.
+"""
+
 import sys
 import time
 from rl_environment import CustomEnv

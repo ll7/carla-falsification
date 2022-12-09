@@ -1,5 +1,44 @@
 #!/usr/bin/env python
 
+"""
+This code appears to define a custom reinforcement learning (RL) environment for 
+training an RL agent to avoid a pedestrian in a simulated town. The environment is 
+implemented as a subclass of the `gym.Env` class from the Gym library, which defines a 
+standard interface for RL environments.
+
+The environment initializes the action and observation spaces, which define the 
+valid range of actions and observations that the RL agent can take and receive, 
+respectively. The action space is defined as a 3-dimensional box with bounds 
+[-1, -1, 1] and [1, 1, 1], representing the x and y components of the direction 
+vector and the speed of the vehicle, respectively. The observation space is defined 
+as a 10-dimensional box with bounds [100, 250, 100, 250, 0, 0, -30, -30, -1, -1] 
+and [400, 360, 400, 360, 15, 15, 30, 30, 1, 1], representing the position and 
+velocity of the vehicle and pedestrian, as well as the direction vector of the pedestrian.
+
+Next, the environment sets up a connection to the CARLA simulation server, which 
+runs the simulated town, and creates the necessary actors, such as the vehicle and 
+pedestrian, and sensors, such as the camera and lidar, in the simulation. 
+The environment also sets up a connection to the town map, 
+which is used to compute distances and directions between actors in the town.
+
+The environment defines several methods for interacting with the simulation and the 
+RL agent. The `step()` method is called by the RL agent to take an action in the 
+environment and receive the resulting observation, reward, and done flag. 
+This method updates the position and velocity of the vehicle and pedestrian in the 
+simulation, computes the reward based on the distance and relative velocities of the 
+vehicle and pedestrian, and returns the resulting observation, reward, and done 
+flag to the RL agent. The `reset()` method is called by the RL agent to reset the 
+environment to its initial state, and the `render()` method is called to display 
+the current state of the environment.
+
+RL environment for training an RL agent to avoid a pedestrian in a simulated town. 
+It sets up the connection to the CARLA simulation server and creates the necessary 
+actors and sensors in the simulation. It also defines the action and observation spaces 
+and the methods for interacting with the environment and the RL agent. 
+This environment can be used as a basis for training an RL agent to avoid collisions 
+with pedestrians in a simulated town.
+"""
+
 import datetime
 import glob
 import math

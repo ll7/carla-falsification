@@ -1,3 +1,14 @@
+"""
+The `validate_action_sequence.py` script tests a previously saved action sequence on 
+a simulation of a custom environment. The environment simulates a car driving in a city 
+and tries to avoid a pedestrian. The script loads the action sequence from a file, tests 
+it on the environment, and plots the rewards obtained over time. 
+The rewards can be used to evaluate how well the action sequence performs in the 
+simulation. The script allows for different modes, such as "humanSync" and "human", 
+which affect how the simulation is run. The script can also be configured to plot the 
+rewards obtained during the simulation.
+"""
+
 import sys
 import time
 sys.path.append(".")

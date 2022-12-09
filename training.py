@@ -1,3 +1,46 @@
+"""
+This code appears to be a script for training a reinforcement learning (RL) agent 
+using the Proximal Policy Optimization (PPO) algorithm with custom classes for the 
+environment, network architecture, policy, and callbacks. 
+The script first imports the necessary libraries and defines some custom classes, 
+including a `CustomNetwork` class for the policy and value networks, a 
+`CustomActorCriticPolicy` class for the policy, and a `CustomCallback` class for logging.
+
+Next, the script creates an instance of the custom RL environment, and then trains 
+the RL agent using the PPO algorithm. The PPO algorithm is initialized with the 
+custom policy, network architecture, and callbacks, and the training process is 
+run for a specified number of time steps. The script logs various metrics, 
+such as the reward and the value loss, during training, and saves the trained 
+agent at the end of the process.
+
+After training the agent, the script uses the trained agent to evaluate its 
+performance in the environment by running a number of episodes and logging the 
+total reward and the number of timesteps taken in each episode. 
+The script then plots the rewards and timesteps over the course of the evaluation, 
+and outputs the mean and standard deviation of the rewards and timesteps. 
+This provides an indication of how well the agent was able to solve the task in the 
+environment.
+
+The script also includes some additional functionality for hyperparameter 
+optimization using the Optuna library. 
+This allows the user to specify a range of hyperparameter values to try, 
+and the script will automatically run multiple training sessions with different 
+hyperparameters and select the best set of hyperparameters based on the performance 
+of the trained agents. This can be useful for improving the performance of the agent and 
+fine-tuning its behavior.
+
+After training and evaluating the agent, the script ends by cleaning up and 
+closing any open resources, such as the environment and the logger. 
+This ensures that the script terminates cleanly and does not leave any 
+unnecessary resources open.
+
+Overall, this script provides an example of how to train an RL agent using the 
+PPO algorithm with custom classes for the environment, network architecture, 
+policy, and callbacks. It also includes functionality for hyperparameter 
+optimization and performance evaluation, 
+which can be useful for improving the agent's performance.
+"""
+
 import sys
 import time
 import gym
